@@ -1,0 +1,10 @@
+dev.markdown
+.env
+node_modules/
+npm-debug.log
+.tmp
+.DS_Store
+.idea/
+*.swp
+connect.js
+env.sh
