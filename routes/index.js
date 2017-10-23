@@ -1,9 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var IncomingWebhook = require('@slack/client').IncomingWebhook;
-
 var url = process.env.SLACK_WEBHOOK_URL || '';
-
 var webhook = new IncomingWebhook(url);
 
 /* GET home page. */
