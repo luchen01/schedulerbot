@@ -10,7 +10,7 @@ var token = process.env.SLACK_API_TOKEN || '';
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
-  web.chat.postMessage('C1232456', 'Hello there', function(err, res) {
+  web.chat.postMessage('C1232456', 'posting message', function(err, res) {
     if (err) {
       console.log('Error:', err);
     } else {
