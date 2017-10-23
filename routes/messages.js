@@ -1,5 +1,3 @@
-// var express = require('express');
-// var router = express.Router();
 var RtmClient = require('@slack/client').RtmClient;
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var bot_token = process.env.SLACK_BOT_TOKEN || '';
