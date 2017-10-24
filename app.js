@@ -23,6 +23,8 @@ function sendMessageToSlackResponseURL(responseURL, JSONmessage){
     request(postOptions, (error, response, body) => {
         if (error){
             console.log('Failed to send messages', error);
+        }else{
+          console.log('Somethin happened at least.');
         }
     })
 }
@@ -39,10 +41,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =>{
-    res.status(200).end() // best practice to respond with empty 200 status code
+    res.status(200).send("happened"); // best practice to respond with empty 200 status code
     var reqBody = req.body
     var responseURL = reqBody.response_url
-    if (reqBody.token != YOUR_APP_VERIFICATION_TOKEN){
+    if (reqBody.token != process.env.SLACK_VERIFICATION_TOKEN){
         res.status(403).end("Access forbidden")
     }else{
       var message = {

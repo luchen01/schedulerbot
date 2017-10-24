@@ -11,7 +11,6 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   console.log('Message:', message); //this is no doubt the lamest possible message handler, but you get the idea
-  console.log(message.text);
   rtm.sendMessage('Thank you for your message', 'G7NHU1THS');
 });
 rtm.start();
