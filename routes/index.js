@@ -8,4 +8,20 @@ router.get('/', function(req, res, next) {
 //
 // })
 
+// router.post('/messages_action', function(req,res, next){
+//   rtm.sendMessage()
+// })
+// router.get('/auth', function(req,res, next){
+//   axios.get("https://slack.com/oauth/authorize", {
+//     params:{
+//     client_id: process.env.SLACK_CLIENT_ID,
+//     scope: "chat write user"
+//   }
+//   })
+//   .then(function(resp){
+//     res.send(resp)
+//   })
+// })
+
+
 module.exports = router;
