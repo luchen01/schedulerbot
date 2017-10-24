@@ -41,9 +41,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =>{
-    res.status(200).send("happened"); // best practice to respond with empty 200 status code
+    //res.status(200).send("happened"); // best practice to respond with empty 200 status code
     var reqBody = req.body
+    console.log(req.body);
     var responseURL = reqBody.response_url
+    console.log(responseURL);
     if (reqBody.token != process.env.SLACK_VERIFICATION_TOKEN){
         res.status(403).end("Access forbidden")
     }else{
