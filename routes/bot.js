@@ -1,6 +1,6 @@
 var { WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS } = require('@slack/client');
 var bot_token = process.env.SLACK_BOT_TOKEN || '';
-var dialogflow = require('./dialog');
+var dialogflow = require('./dialogflow');
 var axios = require('axios');
 var rtm = new RtmClient(bot_token);
 var web = new WebClient(bot_token);
@@ -11,10 +11,11 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 
 function handleDialogflowConvo(message) {
+  // console.log('MESSAGE', message);
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
     var { data } = res;
-    // console.log('DIALOGFLOW RESPONSE', data);
+    console.log('DIALOGFLOW RESPONSE', data);
     if (data.result.actionIncomplete) {
       web.chat.postMessage(message.channel, data.result.fulfillment.speech);
     } else {
