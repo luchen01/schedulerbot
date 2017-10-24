@@ -38,7 +38,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.post('/send-me-buttons', urlencodedParser, (req, res) =>{
+app.post('/slash_commands/send-me-buttons', urlencodedParser, (req, res) =>{
     res.status(200).end() // best practice to respond with empty 200 status code
     var reqBody = req.body
     var responseURL = reqBody.response_url
