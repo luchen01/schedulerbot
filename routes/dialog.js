@@ -2,12 +2,13 @@
 var axios = require('axios');
 module.exports = {
   interpretUserMessage(message, sessionId){
-    return axios.get('http://api.dialogflow.com/v1/query', {
+    console.log('Got to interpretUserMessage');
+    return axios.get('https://api.dialogflow.com/v1/query', {
       params: {
         v: '20170712',
         query: message,
         sessionId,
-        timeZone: 'America/Los_Angeles',
+        timezone: 'America/Los_Angeles',
         lang: 'en'
       },
       headers:  {

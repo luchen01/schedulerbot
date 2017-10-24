@@ -4,7 +4,6 @@ var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var bot_token = process.env.SLACK_BOT_TOKEN || '';
 var dialogflow = require('./dialog');
-var axios = require('axios');
 var rtm = new RtmClient(bot_token);
 var web = new WebClient(bot_token);
 rtm.start();
@@ -24,13 +23,15 @@ function handleDialogflowConvo(message) {
     if (data.result.actionIncomplete) {
       web.chat.postMessage(message.channel, data.result.fulfillment.speech);
     } else {
-
       web.chat.postMessage(message.channel,
         `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
+
     }
   })
   .catch(function(err) {
-    console.log('Error sending message to Dialogflow', err);
+    console.log('Error sending message to Dialogflow');
+    web.chat.postMessage(message.channel,
+      `Failed to understand your request.`);
   });
 }
 
@@ -38,8 +39,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   if (! message.user) {
     console.log('Message send by a bot, ignoring');
     return;
+  } else {
+    // web.chat.postMessage(message.channel, `Hello,
+    // I'm Scheduler Bot. Please give me access to your Google Calendar http://localhost:3000/setup?slackId=${message.user}`);
+    handleDialogflowConvo(message);
   }
-  handleDialogflowConvo(message);
-//   web.chat.postMessage(message.channel, `Hello,
-//   I'm Scheduler Bot. Please give me access to your Google Calendar http://localhost:3000/setup?slackId=${message.user}`);
 });

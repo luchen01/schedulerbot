@@ -21,7 +21,6 @@ module.exports = {
       access_type: 'offline',
       prompt: 'consent',
       scope
-      // state: 'foo'
     });
   },
 
