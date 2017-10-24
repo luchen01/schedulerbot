@@ -74,9 +74,9 @@ app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =
               ]
           }
       ]
-      // };
+       };
         sendMessageToSlackResponseURL(responseURL, message)
-    }
+  //  }
 })
 app.post('/messages_actions', urlencodedParser, (req, res) =>{
     res.status(200).end() // best practice to respond with 200 status
