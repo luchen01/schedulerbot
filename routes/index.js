@@ -1,23 +1,12 @@
 var express = require('express');
 var router = express.Router();
-var axios = require('axios');
-
 /* GET home page. */
-// router.get('/', function(req, res, next) {
-//   res.render('index', { title: 'Express' });
-//   webhook.send('Hello there', function(err, header, statusCode, body) {
-//     if (err) {
-//       console.log('Error:', err);
-//     } else {
-//       console.log('Received', statusCode, 'from Slack');
-//     }
-//   });
-// });
-
-
-router.get('/', function(req, res, next){
-  res.redirect('https://slack.com/oauth/authorize')
+router.get('/', function(req, res, next) {
+  res.redirect('https://slack.com/oauth/authorize');
 });
+// router.get('/messages_action', function(req, res, next){
+//
+// })
 
 router.post('/messages_action', function(req,res, next){
   console.log('POST MOTHAFUCKA');

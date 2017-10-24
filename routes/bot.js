@@ -1,12 +1,13 @@
-var { RtmClient, RTM_EVENTS, WebClient } = require('@slack/client').RtmClient;
-var dialogflow = require('./dialogflow');
-
-var token = process.env.SLACK_API_TOKEN || '';
-
-var rtm =  new RtmClient(token);
-var web = new WebClient(token);
-
+var { WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS } = require('@slack/client');
+var bot_token = process.env.SLACK_BOT_TOKEN || '';
+var dialogflow = require('./dialog');
+var rtm = new RtmClient(bot_token);
+var web = new WebClient(bot_token);
 rtm.start();
+//The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload if you want to cache it
+rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
+  console.log(`Logged in as ${rtmStartData.self.name} of team ${rtmStartData.team.name}, but not yet connected to a channel`);
+});
 
 function handleDialogflowConvo(message) {
   dialogflow.interpretUserMessage(message.text, message.user)
