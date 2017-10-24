@@ -46,9 +46,9 @@ app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =
     console.log(req.body);
     var responseURL = reqBody.response_url
     console.log(responseURL);
-    if (reqBody.token != process.env.SLACK_VERIFICATION_TOKEN){
-        res.status(403).end("Access forbidden")
-    }else{
+    // if (reqBody.token != process.env.SLACK_VERIFICATION_TOKEN){
+    //   //  res.status(403).end("Access forbidden")
+    // }else{
       var message = {
       "text": "Would you like to add an event to your Google Calendar?",
       "attachments": [
@@ -74,7 +74,7 @@ app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =
               ]
           }
       ]
-      };
+      // };
         sendMessageToSlackResponseURL(responseURL, message)
     }
 })
