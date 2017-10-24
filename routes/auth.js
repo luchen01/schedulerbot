@@ -17,7 +17,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   .then(function(res){
     var {data} = res;
     if(data.result.actionIncomplete){
-      web.chat.postMessage(message.channel, data,result,fulfillment.speech)
+      web.chat.postMessage(message.channel, data,result, fulfillment.speech)
     }else{
       web.chat.postMessage(message.channel, `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
     }
