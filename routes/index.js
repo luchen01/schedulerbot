@@ -5,22 +5,14 @@ var request = require('request');
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
+
 /* GET home page. */
-// router.get('/', function(req, res, next) {
-//   res.render('index', { title: 'Express' });
-//   webhook.send('Hello there', function(err, header, statusCode, body) {
-//     if (err) {
-//       console.log('Error:', err);
-//     } else {
-//       console.log('Received', statusCode, 'from Slack');
-//     }
-//   });
-// });
-
-
-router.get('/', function(req, res, next){
-  res.redirect('https://slack.com/oauth/authorize')
+router.get('/', function(req, res, next) {
+  res.redirect('https://slack.com/oauth/authorize');
 });
+// router.get('/messages_action', function(req, res, next){
+//
+// })
 
 
 function sendMessageToSlackResponseURL(responseURL, JSONmessage){
@@ -42,7 +34,7 @@ function sendMessageToSlackResponseURL(responseURL, JSONmessage){
 }
 
 router.post('/slack/slash-commands/send-me-buttons', urlencodedParser, (req, res) =>{
-    res.status(200).end(); // best practice to respond with empty 200 status code
+    // res.status(200).end(); // best practice to respond with empty 200 status code
     var reqBody = req.body;
     var responseURL = reqBody.response_url;
     if (reqBody.token != process.env.SLACK_API_TOKEN){
