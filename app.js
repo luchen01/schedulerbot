@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 require('./routes/bot');
-
+require('./routes/googleCal');
 var index = require('./routes/index');
 var users = require('./routes/users');
 var request = require('request');
@@ -42,11 +42,52 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/', index);
+app.use('/users', users);
+
+app.get('/setup', function(req, res, next){
+  res.send('thank you for trying to setup')
+})
+
+app.get('/google/callback', function(req, res){
+  google.getToken(req.query.code)
+  .then(function(tokens){
+
+  })
+  .catch(function(error){
+
+  })
+})
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+module.exports = app;
+
 // app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =>{
-//   //  res.status(200).send("happened"); // best practice to respond with empty 200 status code
+//     //res.status(200).send("happened"); // best practice to respond with empty 200 status code
 //     var reqBody = req.body
+//     console.log(req.body);
 //     var responseURL = reqBody.response_url
-//
+//     console.log(responseURL);
+//     // if (reqBody.token != process.env.SLACK_VERIFICATION_TOKEN){
+//     //   //  res.status(403).end("Access forbidden")
+//     // }else{
 //       var message = {
 //       "text": "Would you like to add an event to your Google Calendar?",
 //       "attachments": [
@@ -72,10 +113,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 //               ]
 //           }
 //       ]
-//       };
+//        };
 //         sendMessageToSlackResponseURL(responseURL, message)
-//     })
-//
+//   //  }
+// })
 // app.post('/messages_actions', urlencodedParser, (req, res) =>{
 //     res.status(200).end() // best practice to respond with 200 status
 //     var actionJSONPayload = JSON.parse(req.body.payload) // parse URL-encoded payload JSON string
@@ -85,40 +126,3 @@ app.use(express.static(path.join(__dirname, 'public')));
 //     }
 //     sendMessageToSlackResponseURL(actionJSONPayload.response_url, message)
 // })
-
-app.use('/', index);
-app.use('/users', users);
-
-app.get('/setup', function(req, res, next){
-  res.send('thank you for trying to setup')
-})
-
-app.get('/google/callback', function(req, res){
-  google.getToken(req.query.code)
-  .then(function(tokens){
-
-  })
-  .catch(function(error){
-    
-  })
-})
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
