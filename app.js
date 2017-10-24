@@ -5,30 +5,13 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 require('./routes/bot');
-require('./routes/googleCal');
+var google = require('./routes/googleCal');
 var index = require('./routes/index');
 var users = require('./routes/users');
 var request = require('request');
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var app = express();
 
-function sendMessageToSlackResponseURL(responseURL, JSONmessage){
-    var postOptions = {
-        uri: responseURL,
-        method: 'POST',
-        headers: {
-            'Content-type': 'application/json'
-        },
-        json: JSONmessage
-    }
-    request(postOptions, (error, response, body) => {
-        if (error){
-            console.log('Failed to send messages', error);
-        }else{
-          console.log('Somethin happened at least.');
-        }
-    })
-}
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -40,6 +23,30 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/setup', function(req, res){
+  if(req.query.slackId){
+    res.redirect(google.generateAuthUrl());
+  }
+})
+app.get('/google/callback', function(req, res){
+  if(req.query.code){
+    google.getToken(req.query.code)
+    .then(function(code){
+      return google.createCalendarEvent(code, 'NEW event', "2017-10-25")
+    })
+    .then(function(){
+      res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
+    })
+    .catch((err)=>{
+      if(err){
+        console.log(err);
+      }
+    })
+  }
+})
+// app.get('/messages', function)
+
 
 app.use('/', index);
 app.use('/users', users);
@@ -70,6 +77,23 @@ module.exports = app;
 
 
 
+// function sendMessageToSlackResponseURL(responseURL, JSONmessage){
+//     var postOptions = {
+//         uri: responseURL,
+//         method: 'POST',
+//         headers: {
+//             'Content-type': 'application/json'
+//         },
+//         json: JSONmessage
+//     }
+//     request(postOptions, (error, response, body) => {
+//         if (error){
+//             console.log('Failed to send messages', error);
+//         }else{
+//           console.log('Somethin happened at least.');
+//         }
+//     })
+// }
 // app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =>{
 //     //res.status(200).send("happened"); // best practice to respond with empty 200 status code
 //     var reqBody = req.body

@@ -32,6 +32,7 @@ module.exports = {
         if (err)  {
           reject(err);
         } else {
+          console.log('authorized');
           resolve(tokens);
         }
       });
