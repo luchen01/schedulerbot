@@ -1,17 +1,38 @@
 var express = require('express');
 var router = express.Router();
-var WebClient = require('@slack/client').WebClient;
-var web = new WebClient(token);
-var token = process.env.SLACK_API_TOKEN || '';
-var rtm = require('./bot');
+var axios = require('axios');
+
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+// router.get('/', function(req, res, next) {
+//   res.render('index', { title: 'Express' });
+//   webhook.send('Hello there', function(err, header, statusCode, body) {
+//     if (err) {
+//       console.log('Error:', err);
+//     } else {
+//       console.log('Received', statusCode, 'from Slack');
+//     }
+//   });
+// });
+
+
+router.get('/', function(req, res, next){
+  res.redirect('https://slack.com/oauth/authorize')
 });
 
-router.post('/messages_action', (req, res) =>{
-  console.log('MESSAGE ACTION');
-  res.send('MESSAGE ACTION');
-})
+// router.post('/messages_action', function(req,res, next){
+//   rtm.sendMessage()
+// })
+// router.get('/auth', function(req,res, next){
+//   axios.get("https://slack.com/oauth/authorize", {
+//     params:{
+//     client_id: process.env.SLACK_CLIENT_ID,
+//     scope: "chat write user"
+//   }
+//   })
+//   .then(function(resp){
+//     res.send(resp)
+//   })
+// })
+
 
 module.exports = router;
