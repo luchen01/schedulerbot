@@ -19,9 +19,11 @@ router.get('/', function(req, res, next){
   res.redirect('https://slack.com/oauth/authorize')
 });
 
-// router.post('/messages_action', function(req,res, next){
-//   rtm.sendMessage()
-// })
+router.post('/messages_action', function(req,res, next){
+  console.log('POST MOTHAFUCKA');
+  rtm.sendMessage()
+})
+
 // router.get('/auth', function(req,res, next){
 //   axios.get("https://slack.com/oauth/authorize", {
 //     params:{

@@ -1,18 +1,34 @@
-var RtmClient = require('@slack/client').RtmClient;
-var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
-var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
+var { RtmClient, RTM_EVENTS, WebClient } = require('@slack/client').RtmClient;
+var dialogflow = require('./dialogflow');
 
-var bot_token = process.env.SLACK_API_TOKEN || '';
+var token = process.env.SLACK_API_TOKEN || '';
 
-var rtm = new RtmClient(bot_token);
-console.log(bot_token);
-//The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload if you want to cache it
-rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
-  console.log(`Logged in as ${rtmStartData.self.name} of team ${rtmStartData.team.name}, but not yet connected to a channel`);
-});
-rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
-  console.log('Message:', message); //this is no doubt the lamest possible message handler, but you get the idea
-});
+var rtm =  new RtmClient(token);
+var web = new WebClient(token);
+
 rtm.start();
 
-module.exports = rtm;
+function handleDialogflowConvo(message) {
+  dialogflow.interpretUserMessage(message.text, message.user)
+  .then(function(res) {
+    var { data } = res;
+    console.log('DIALOGFLOW RESPONSE', res.data);
+    if (data.result.actionIncomplete) {
+      web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+    } else {
+      web.chat.postMessage(message.channel,
+        `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
+    }
+  })
+  .catch(function(err) {
+    console.log('Error sending message to Dialogflow', err);
+  });
+}
+
+rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
+  if (message.user) {
+    web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot.
+    Please give me access to your Google Calendar
+    http://localhost:3000/setup?slackId=${message.user}`);
+  }
+});
