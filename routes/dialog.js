@@ -1,9 +1,8 @@
 "use strict";
-
 var axios = require('axios');
-
 module.exports = {
-  interpretUserMessage(message, sessionId) {
+  interpretUserMessage(message, sessionId){
+    console.log('Got to interpretUserMessage');
     return axios.get('https://api.dialogflow.com/v1/query', {
       params: {
         v: '20170712',
@@ -12,9 +11,9 @@ module.exports = {
         timezone: 'America/Los_Angeles',
         lang: 'en'
       },
-      headers: {
+      headers:  {
         Authorization: `Bearer ${process.env.API_AI_TOKEN}`
       }
-    });
+    })
   }
-};
+}

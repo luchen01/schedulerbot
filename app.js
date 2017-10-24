@@ -24,6 +24,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// app.get('/reminder', function(req, res){
+//   res.send(res);
+// })
 app.get('/setup', function(req, res){
   if(req.query.slackId){
     res.redirect(google.generateAuthUrl());
