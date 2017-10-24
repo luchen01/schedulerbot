@@ -13,7 +13,7 @@ function handleDialogflowConvo(message) {
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
     var { data } = res;
-    console.log('DIALOGFLOW RESPONSE', res.data);
+    // console.log('DIALOGFLOW RESPONSE', data);
     if (data.result.actionIncomplete) {
       web.chat.postMessage(message.channel, data.result.fulfillment.speech);
     } else {
@@ -28,8 +28,7 @@ function handleDialogflowConvo(message) {
 
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   if (message.user) {
-    web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot.
-    Please give me access to your Google Calendar
-    http://localhost:3000/setup?slackId=${message.user}`);
+    handleDialogflowConvo(message);
+    web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me access to your Google Calendar http://localhost:3000/setup?slackId=${message.user}`);
   }
 });

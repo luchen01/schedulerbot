@@ -41,7 +41,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-require('./bot');
 app.use('/', index);
 app.use('/users', users);
 
@@ -64,57 +63,3 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
-
-
-
-
-
-
-
-// app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =>{
-//     //res.status(200).send("happened"); // best practice to respond with empty 200 status code
-//     var reqBody = req.body
-//     console.log(req.body);
-//     var responseURL = reqBody.response_url
-//     console.log(responseURL);
-//     // if (reqBody.token != process.env.SLACK_VERIFICATION_TOKEN){
-//     //   //  res.status(403).end("Access forbidden")
-//     // }else{
-//       var message = {
-//       "text": "Would you like to add an event to your Google Calendar?",
-//       "attachments": [
-//           {
-//               "text": "Game night on Thurday",
-//               "fallback": "You are unable to create a new calendar event.",
-//               "callback_id": "calendar",
-//               "color": "#3AA3E3",
-//               "attachment_type": "default",
-//               "actions": [
-//                   {
-//                       "name": "answer",
-//                       "text": "Yes",
-//                       "type": "button",
-//                       "value": "true"
-//                   },
-//                   {
-//                       "name": "answer",
-//                       "text": "No",
-//                       "type": "button",
-//                       "value": "false"
-//                   }
-//               ]
-//           }
-//       ]
-//        };
-//         sendMessageToSlackResponseURL(responseURL, message)
-//   //  }
-// })
-// app.post('/messages_actions', urlencodedParser, (req, res) =>{
-//     res.status(200).end() // best practice to respond with 200 status
-//     var actionJSONPayload = JSON.parse(req.body.payload) // parse URL-encoded payload JSON string
-//     var message = {
-//         "text": actionJSONPayload.user.name+" clicked: "+actionJSONPayload.actions[0].name,
-//         "replace_original": false
-//     }
-//     sendMessageToSlackResponseURL(actionJSONPayload.response_url, message)
-// })
