@@ -44,9 +44,7 @@ app.post('/slack/slash_commands/send-me-buttons', urlencodedParser, (req, res) =
   //  res.status(200).send("happened"); // best practice to respond with empty 200 status code
     var reqBody = req.body
     var responseURL = reqBody.response_url
-    if (reqBody.token != process.env.SLACK_BOT_TOKEN){
-        res.status(403).end("Access forbidden")
-    }else{
+
       var message = {
       "text": "Would you like to add an event to your Google Calendar?",
       "attachments": [
