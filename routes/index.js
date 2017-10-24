@@ -10,9 +10,6 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 router.get('/', function(req, res, next) {
   res.redirect('https://slack.com/oauth/authorize');
 });
-// router.get('/messages_action', function(req, res, next){
-//
-// })
 
 
 module.exports = router;

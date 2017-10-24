@@ -11,7 +11,7 @@ module.exports = {
         lang: 'en'
       },
       headers:  {
-        Authorizatioin: `Bearer ${process.env.API_AI_TOKEN}`
+        Authorization: `Bearer ${process.env.API_AI_TOKEN}`
       }
     })
   }
