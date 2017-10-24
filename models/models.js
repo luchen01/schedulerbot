@@ -7,9 +7,8 @@ const userSchema = new Schema({
     required: true,
     unique: true,
   },
-  password: {
-    type: String,
-    required: true,
+  gAuth: {
+    type: String
   }
 });
 
