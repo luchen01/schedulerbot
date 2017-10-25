@@ -67,7 +67,7 @@ app.post('/messagesAction', (req, res) =>{
   var newTask = new Task({
     subject: data.original_message.attachments[0].fields[0].value,
     day:data.original_message.attachments[0].fields[1].value,
-    requesterId:data.user.id
+    requesterId: data.user.id
   });
 
   newTask.save(function(err){
