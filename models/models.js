@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 var connect = process.env.MONGODB_URI;
 mongoose.connect(connect);
 const Schema = mongoose.Schema;
+mongoose.Promise = global.Promise;
+mongoose.connect(process.env.MONGODB_URI);
 
 const taskSchema = new Schema({
   subject: {
@@ -76,7 +78,6 @@ const inviteRequestSchema = new Schema({
   },
   confirmed: Boolean,
 });
-
 
 userSchema.statics.findOrCreate = function(slackId){
   return User.findOne({slackId})
