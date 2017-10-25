@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
+var connect = process.env.MONGODB_URI;
+mongoose.connect(connect);
 const Schema = mongoose.Schema;
+mongoose.Promise = global.Promise;
+mongoose.connect(process.env.MONGODB_URI);
 
 const taskSchema = new Schema({
   subject: {
@@ -11,7 +15,7 @@ const taskSchema = new Schema({
     required: true,
   },
   googleCalEventId: String,
-  requesertId: {
+  requesterId: {
     type: Schema.ObjectId,
     ref: 'User',
   },
@@ -20,10 +24,6 @@ const taskSchema = new Schema({
 const meetingSchema = new Schema({
   day: {
     type: Date,
-    required: true,
-  },
-  invitees: {  //WTF
-    type: Array,
     required: true,
   },
   subject: String,
@@ -48,7 +48,7 @@ const userSchema = new Schema({
     accessToken: {
       type: String,
       unique: true,
-      required: true,
+      // required: true,
     },
   },
   slackId: {
@@ -60,6 +60,8 @@ const userSchema = new Schema({
   slackEmail: String,
   SlackDMIds: Array,
 });
+
+
 
 const inviteRequestSchema = new Schema({
   eventId: {
@@ -77,8 +79,21 @@ const inviteRequestSchema = new Schema({
   confirmed: Boolean,
 });
 
+userSchema.statics.findOrCreate = function(slackId){
+  return User.findOne({slackId})
+    .then(function(user){
+      if(user){
+        return user;
+      } else {
+        return new User({slackId}).save();
+      }
+    })
+};
+
+var User = mongoose.model('User', userSchema);
+
 module.exports = {
-  User: mongoose.model('User', userSchema),
+  User: User,
   Task: mongoose.model('Task', taskSchema),
   Meeting: mongoose.model('Meeting', meetingSchema),
   InviteRequest: mongoose.model('InviteRequest', inviteRequestSchema),
