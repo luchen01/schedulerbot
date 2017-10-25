@@ -30,13 +30,13 @@ function handleDialogflowConvo(message) {
             "attachment_type": "default",
             "actions": [
               {
-                "name": "game",
+                "name": "confirmation",
                 "text": "Yes",
                 "type": "button",
                 "value": "yes"
               },
               {
-                "name": "game",
+                "name": "confirmation",
                 "text": "No",
                 "type": "button",
                 "value": "no"
