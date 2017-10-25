@@ -48,7 +48,7 @@ app.get('/google/callback', function(req, res){
     })
   }
 })
-app.post('/messages_actions', (req, res) =>{
+app.post('/messages_action', (req, res) =>{
   console.log(JSON.parse(req.body.payload));
 })
 
