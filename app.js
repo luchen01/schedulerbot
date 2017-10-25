@@ -49,10 +49,7 @@ app.get('/google/callback', function(req, res){
   }
 })
 app.post('/messages_actions', (req, res) =>{
-  console.log(req.body);
-})
-app.get('/messages_actions',(req, res) => {
-  res.send(req.body);
+  console.log(JSON.parse(req.body.payload));
 })
 
 app.use('/', index);

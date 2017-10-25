@@ -45,7 +45,10 @@ function handleDialogflowConvo(message) {
           }
         ]
       })
-
+      // fetch("https://pinocchiobot.herokuapp.com/messages_actions", {
+      //   method: 'GET',
+      //   data:
+      // })
       // web.chat.postMessage(message.channel,
       //   `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
       //  google.createCalendarEvent(token, data.result.parameters.description, data.result.parameters.date);
