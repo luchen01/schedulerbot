@@ -48,7 +48,7 @@ app.get('/google/callback', function(req, res){
     })
   }
 })
-app.get('https://pinocchiobot.herokuapp.com/messages_actions', (req, res) =>{
+app.post('/messages_actions', (req, res) =>{
   console.log(req);
 })
 
