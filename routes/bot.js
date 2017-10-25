@@ -1,6 +1,7 @@
 var { WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS } = require('@slack/client');
 var bot_token = process.env.SLACK_BOT_TOKEN || '';
 var dialogflow = require('./dialog');
+var google = require('./googleCal');
 var rtm = new RtmClient(bot_token);
 var web = new WebClient(bot_token);
 rtm.start();
@@ -20,7 +21,7 @@ function handleDialogflowConvo(message) {
     } else {
       web.chat.postMessage(message.channel,
         `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
-
+        google.createCalendarEvent(data.result.parameters.description, data.result.parameters.date);
     }
   })
   .catch(function(err) {
@@ -35,8 +36,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-    // web.chat.postMessage(message.channel, `Hello,
-    // I'm Scheduler Bot. Please give me access to your Google Calendar http://localhost:3000/setup?slackId=${message.user}`);
+
     handleDialogflowConvo(message);
   }
 });
