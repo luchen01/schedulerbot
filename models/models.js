@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+mongoose.Promise = global.Promise;
+mongoose.connect(process.env.MONGODB_URI);
 
 const taskSchema = new Schema({
   subject: {
@@ -11,7 +13,7 @@ const taskSchema = new Schema({
     required: true,
   },
   googleCalEventId: String,
-  requesertId: {
+  requesterId: {
     type: Schema.ObjectId,
     ref: 'User',
   },
@@ -73,6 +75,16 @@ const inviteRequestSchema = new Schema({
   confirmed: Boolean,
 });
 
+userSchema.statics.findOrCreate = function(slackId){
+  return User.findOne({slackId})
+    .then(function(user){
+      if(user){
+        return user;
+      } else {
+        return new User({slackId}).save();
+      }
+    })
+}
 module.exports = {
   User: mongoose.model('User', userSchema),
   Task: mongoose.model('Task', taskSchema),
