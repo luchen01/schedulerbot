@@ -1,4 +1,4 @@
-var { WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS } = require('@slack/client');
+var { SlackClient, WebClient, RtmClient, CLIENT_EVENTS, RTM_EVENTS } = require('@slack/client');
 var bot_token = process.env.SLACK_BOT_TOKEN || '';
 var dialogflow = require('./dialog');
 var google = require('./googleCal');
@@ -20,11 +20,40 @@ function handleDialogflowConvo(message) {
       web.chat.postMessage(message.channel, data.result.fulfillment.speech);
     } else {
       web.chat.postMessage(message.channel,
-        `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
-      google.createCalendarEvent(data.result.parameters.description, data.result.parameters.date)
-      .then(function(res){
-        
-      });
+        "Would you like me to add a new Google Calendar event?",{
+        "attachments": [
+          {
+            "text": "Please, confirm.",
+            "fallback": "You are unable to add a new Calendar event.",
+            "callback_id": "reminder",
+            "color": "#3AA3E3",
+            "attachment_type": "default",
+            "actions": [
+              {
+                "name": "confirmation",
+                "text": "Yes",
+                "type": "button",
+                "value": "true",
+                "style": "primary"
+              },
+              {
+                "name": "confirmation",
+                "text": "No",
+                "type": "button",
+                "value": "false",
+                "style": "danger"
+              }
+            ]
+          }
+        ]
+      })
+      // fetch("https://pinocchiobot.herokuapp.com/messages_actions", {
+      //   method: 'GET',
+      //   data:
+      // })
+      // web.chat.postMessage(message.channel,
+      //   `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
+      //  google.createCalendarEvent(token, data.result.parameters.description, data.result.parameters.date);
     }
   })
   .catch(function(err) {
@@ -39,7 +68,6 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-
     handleDialogflowConvo(message);
   }
 });

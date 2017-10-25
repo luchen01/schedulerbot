@@ -34,31 +34,29 @@ app.get('/setup', function(req, res){
   }
 })
 app.get('/google/callback', function(req, res){
-  if(req.query.code){
-    google.getToken(req.query.code)
-    .then(function(code){
-      return google.createCalendarEvent(code, 'NEW event', "2017-10-25")
-    })
-    .then(function(){
-      res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
-    })
-    .catch((err)=>{
-      if(err){
-        console.log(err);
-      }
-    })
-  }
-})
-// app.get('/messages', function)
-
-
-app.post('/slack/interactive', function(req, res){
-  var payload = JSON.parse(req.body.payload);
-  if(payload.actions[0].value === 'true'{
-    res.send('Created reminder')
-  }else{
-    res.send('canceled!')
+  var user;
+  var tokens;
+  User.findOne({slackId: req.query.code})
+  .then(function(u){
+    user = u;
+    return google.getToken(req.query.code)
   })
+  .then(function(t){
+    return google.createCalendarEvent(code, 'NEW event', "2017-10-25")
+  })
+  .then(function(){
+    res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
+  })
+  .catch((err)=>{
+    if(err){
+      console.log(err);
+    }
+  })
+})
+
+app.post('/messagesAction', (req, res) =>{
+  console.log(JSON.parse(req.body.payload));
+  res.send(req.body.payload);
 })
 
 app.use('/', index);
