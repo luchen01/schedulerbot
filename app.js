@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var {Task, User, Meeting, InviteRequest} = require('./models/models');
 
 require('./routes/bot');
 var google = require('./routes/googleCal');
@@ -42,6 +43,12 @@ app.get('/google/callback', function(req, res){
     return google.getToken(req.query.code)
   })
   .then(function(t){
+    tokens = t;
+    user.googleCalAccount.accessToken = t;
+    return user.save();
+  })
+  .then(function(){
+    Task.findOne({})
     return google.createCalendarEvent(code, 'NEW event', "2017-10-25")
   })
   .then(function(){
@@ -55,8 +62,21 @@ app.get('/google/callback', function(req, res){
 })
 
 app.post('/messagesAction', (req, res) =>{
-  console.log(JSON.parse(req.body.payload));
-  res.send(req.body.payload);
+  var data = JSON.parse(req.body.payload);
+  console.log("inside original message fields",data);
+  var newTask = new Task({
+    subject: data.original_message.attachments[0].fields[0].value,
+    day:data.original_message.attachments[0].fields[1].value,
+    requesterId:data.user.id
+  });
+
+  newTask.save(function(err){
+    if(err){
+      console.log("err", err)
+    }
+    res.send("task created!");
+  })
+
 })
 
 app.use('/', index);
@@ -64,16 +84,6 @@ app.use('/users', users);
 
 app.get('/setup', function(req, res, next){
   res.send('thank you for trying to setup')
-})
-
-app.get('/google/callback', function(req, res){
-  google.getToken(req.query.code)
-  .then(function(tokens){
-
-  })
-  .catch(function(error){
-
-  })
 })
 
 // catch 404 and forward to error handler
