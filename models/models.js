@@ -22,10 +22,6 @@ const meetingSchema = new Schema({
     type: Date,
     required: true,
   },
-  invitees: {  //WTF
-    type: Array,
-    required: true,
-  },
   subject: String,
   location: {
     latitude: Number,
