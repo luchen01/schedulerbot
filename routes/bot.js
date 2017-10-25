@@ -21,7 +21,10 @@ function handleDialogflowConvo(message) {
     } else {
       web.chat.postMessage(message.channel,
         `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
-        google.createCalendarEvent(data.result.parameters.description, data.result.parameters.date);
+      google.createCalendarEvent(data.result.parameters.description, data.result.parameters.date)
+      .then(function(res){
+        
+      });
     }
   })
   .catch(function(err) {

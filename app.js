@@ -52,6 +52,15 @@ app.get('/google/callback', function(req, res){
 // app.get('/messages', function)
 
 
+app.post('/slack/interactive', function(req, res){
+  var payload = JSON.parse(req.body.payload);
+  if(payload.actions[0].value === 'true'{
+    res.send('Created reminder')
+  }else{
+    res.send('canceled!')
+  })
+})
+
 app.use('/', index);
 app.use('/users', users);
 
