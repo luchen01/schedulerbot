@@ -77,9 +77,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   } else {
     User.findOrCreate(message.user)
     .then(function(user){
-      if(user.googleCalAccount.accessToken.length > 0){
-        web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me acceses to your Google Calendar https://localhost:3000/setup?slackId=${message.user}`);
-      }
+      //if(user.googleCalAccount.accessToken.length > 0){
+      //  web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me acceses to your Google Calendar https://localhost:3000/setup?slackId=${message.user}`);
+    //  }
     })
     .catch(function(err){
       console.log('Error', err)

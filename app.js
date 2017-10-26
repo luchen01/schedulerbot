@@ -52,7 +52,7 @@ app.get('/google/callback', function(req, res){
   .then(function(){
     Task.findOne({requesterId: user.slackId}).populate('requesterId')
     .then(function(err, task){
-      subject = task.
+      subject = task.subject;
     })
     return google.createCalendarEvent(code, 'NEW event', "2017-10-25");
   })

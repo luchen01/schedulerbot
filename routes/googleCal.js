@@ -11,7 +11,7 @@ function getAuthClient() {
   return new OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'https://6c2c2e56.ngrok.io/google/callback'
+    process.env.DOMAIN + '/google/callback'
   );
 }
 
