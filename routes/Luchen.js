@@ -6,6 +6,7 @@ var rtm = new RtmClient(bot_token);
 var web = new WebClient(bot_token);
 var {Task, User, Meeting, InviteRequest} = require('../models/models');
 
+
 rtm.start();
 //The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload if you want to cache it
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
@@ -14,14 +15,15 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 
 function handleDialogflowConvo(message) {
   // console.log('MESSAGE', message);
-  dialogflow.interpretUserMessage(message.text, message.user)
+  const newText = getMentions(message);
+  dialogflow.interpretUserMessage(newText, message.user)
   .then(function(res) {
     var { data } = res;
+    console.log(data);
     if (data.result.metadata.intentName === 'Remind') {
       if (data.result.actionIncomplete) {
         web.chat.postMessage(message.channel, data.result.fulfillment.speech);
       } else {
-        console.log("message in reminderConfirm", data);
         reminderConfirm(message, data);
       }
     } else {
@@ -41,67 +43,30 @@ function handleDialogflowConvo(message) {
 };
 
 function scheduleConfirm(message, data) {
-  web.chat.postMessage(message.channel,
-    `Would you like me to schedule you ${data.result.parameters.description} ${data.result.parameters.date}?`,
-    {
-      "attachments": [
-        {
-          "fields": [
-            {
-              "title": "subject",
-              "value": data.result.parameters.description
-            },
-            {
-              "title": "date",
-              "value": data.result.parameters.date
-            }
-          ],
-          "text": "Please, confirm.",
-          "fallback": "You are unable to add a new Calendar event.",
-          "callback_id": "reminder",
-          "color": "#3AA3E3",
-          "attachment_type": "default",
-          "actions": [
-            {
-              "name": "confirmation",
-              "text": "Yes",
-              "type": "button",
-              "value": "true",
-              "style": "primary"
-            },
-            {
-              "name": "confirmation",
-              "text": "No",
-              "type": "button",
-              "value": "false",
-              "style": "danger"
-            }
-          ]
-        }
-      ]
-    }
-  )
-};
+  let invitees = data.result.parameters.invitees.join(', ');
 
-function reminderConfirm(message, data) {
   web.chat.postMessage(message.channel,
-    `Would you like me to remind you ${data.result.parameters.description} ${data.result.parameters.date}?`,
+    `Would you like me to schedule you a meeting with ${invitees} on ${data.result.parameters.date} at ${data.result.parameters.time}?`,
     {
       "attachments": [
         {
           "fields": [
             {
-              "title": "subject",
-              "value": data.result.parameters.description
+              "title": "Invite",
+              "value": invitees
             },
             {
               "title": "date",
               "value": data.result.parameters.date
+            },
+            {
+              "title": "time",
+              "value": data.result.parameters.time
             }
           ],
           "text": "Please, confirm.",
           "fallback": "You are unable to add a new Calendar event.",
-          "callback_id": "reminder",
+          "callback_id": "schedule",
           "color": "#3AA3E3",
           "attachment_type": "default",
           "actions": [
@@ -128,21 +93,32 @@ function reminderConfirm(message, data) {
 
 function getMentions(message){
   let inviteeIds = {};
-  let regExp = [/<@(\w+)>/g];
+  let regExp = /<@(\w+)>/g;
   let currId = regExp.exec(message.text);
+  console.log('currId', currId);
   while(currId !== null) {
-    if (inviteeIds.hasOwnProperty(currId[1])){
+    console.log('inside while loop')
+    if (!inviteeIds.hasOwnProperty(currId[1])){
       inviteeIds[currId[1]] = '';
     }
     currId = regExp.exec(message.text);
   }
-  Object.keys(inviteeIds).forEach((user)=>{
-  User.find({slackId: user})
-  .then((slackUser)=>{
-  inviteeIds[user] = slackUser.username;
-  })
-  });
-  return inviteeIds;
+  console.log('before promise all inviteeIds', inviteeIds);
+  Promise.all(Object.keys(inviteeIds).map((user)=>{
+    console.log('inside For Each user', user);
+    return User.find({slackId: user}).exec((slackUser)=>{
+          console.log('SlackUser', slackUser);
+        inviteeIds[user] = slackUser.slackUsername;
+        });
+  }))
+.then(function(){
+  return message.text.slice().split(' ').map((word) => {
+    return (inviteeIds.hasOwnProperty(word)) ? inviteeIds[word] : word;
+  }).join(' ');
+})
+.catch(function(err){
+  console.log('err in getMentions', err)
+})
 }
 
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
@@ -150,8 +126,8 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-
-    User.findOrCreate(message.user)
+    console.log(message);
+    User.findOrCreate(message.user, message.username);
     .then( function(resp){handleDialogflowConvo(message)})
     .catch(function(err){
       console.log('Error', err)
