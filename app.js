@@ -81,13 +81,13 @@ app.post('/messagesAction', (req, res) =>{
   User.findOne({slackId: data.user.id})
   .then(u => {
     user = u;
-    console.log(user.googleCalAccount.accessToken);
     return google.createCalendarEvent(user.googleCalAccount,
-      fieldsArr[0].value, fieldsArr[1].value
+      fieldsArr[0].value,
+      new Date(fieldsArr[1].value).toISOString()
     )
   })
   .then(event => {
-    console.log(event);
+    console.log('EVENT', event);
     let temp;
     switch(data.callback_id) {
       case 'reminder':
@@ -112,6 +112,7 @@ app.post('/messagesAction', (req, res) =>{
     }
     return temp.save()
   })
+  .then(() => res.send('horray'))
   .catch(err => console.log(err));
 })
 
