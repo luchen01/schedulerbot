@@ -13,10 +13,6 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 
 function handleDialogflowConvo(message) {
-<<<<<<< HEAD
-=======
-  console.log('MESSAGE', message);
->>>>>>> 93a0bfe358f63b1cf0d7b01b41f54f3df0b1f81f
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
     var { data } = res;
