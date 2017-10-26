@@ -47,7 +47,7 @@ const userSchema = new Schema({
   googleCalAccount: {
     accessToken: {
       type: String,
-      unique: true,
+      // unique: true,
       // required: true,
     },
   },
