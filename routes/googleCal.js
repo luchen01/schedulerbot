@@ -11,7 +11,11 @@ function getAuthClient() {
   return new OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
+<<<<<<< HEAD
     process.env.DOMAIN + '/google/callback'
+=======
+    `${process.env.DOMAIN}/google/callback`
+>>>>>>> 8b0b5c651d08df81349d75baca164a59435960b9
   );
 }
 
@@ -40,6 +44,8 @@ module.exports = {
   },
 
   createCalendarEvent(tokens, title, date) {
+    console.log('create calendar event', tokens);
+
     var client = getAuthClient();
     client.setCredentials(tokens);
     return new Promise(function(resolve, reject) {

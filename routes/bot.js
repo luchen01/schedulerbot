@@ -16,58 +16,131 @@ function handleDialogflowConvo(message) {
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
     var { data } = res;
-    if (data.result.actionIncomplete) {
-      web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+    if (data.result.metadata.intentName === 'Remind') {
+      if (data.result.actionIncomplete) {
+        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+      } else {
+        console.log("message in reminderConfirm", data);
+        reminderConfirm(message, data);
+      }
     } else {
-        web.chat.postMessage(message.channel,
-          `Would you like me to remind you ${data.result.parameters.description} ${data.result.parameters.date}?`,{
-          "attachments": [
-            {
-              "fields": [
-                {
-                  "title": "subject",
-                  "value": data.result.parameters.description
-                },
-                {
-                  "title": "date",
-                  "value": data.result.parameters.date
-                }
-              ],
-              "text": "Please, confirm.",
-              "fallback": "You are unable to add a new Calendar event.",
-              "callback_id": "reminder",
-              "color": "#3AA3E3",
-              "attachment_type": "default",
-              "actions": [
-                {
-                  "name": "confirmation",
-                  "text": "Yes",
-                  "type": "button",
-                  "value": "true",
-                  "style": "primary"
-                },
-                {
-                  "name": "confirmation",
-                  "text": "No",
-                  "type": "button",
-                  "value": "false",
-                  "style": "danger"
-                }
-              ]
-            }
-          ]})
-        }
-
-      })
-
-      // web.chat.postMessage(message.channel,
-      //   `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
-      //  google.createCalendarEvent(token, data.result.parameters.description, data.result.parameters.date);
+      if (data.result.actionIncomplete) {
+        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+      } else {
+        scheduleConfirm(message, data);
+      }
+    }
+  })
   .catch(function(err) {
-    console.log('Error sending message to Dialogflow');
+    console.log('Error sending message to Dialogflow', err);
     web.chat.postMessage(message.channel,
-      `Failed to understand your request.`);
+      `Failed to understand your request.`
+    );
   });
+};
+
+function scheduleConfirm(message, data) {
+  web.chat.postMessage(message.channel,
+    `Would you like me to schedule you ${data.result.parameters.description} ${data.result.parameters.date}?`,
+    {
+      "attachments": [
+        {
+          "fields": [
+            {
+              "title": "subject",
+              "value": data.result.parameters.description
+            },
+            {
+              "title": "date",
+              "value": data.result.parameters.date
+            }
+          ],
+          "text": "Please, confirm.",
+          "fallback": "You are unable to add a new Calendar event.",
+          "callback_id": "reminder",
+          "color": "#3AA3E3",
+          "attachment_type": "default",
+          "actions": [
+            {
+              "name": "confirmation",
+              "text": "Yes",
+              "type": "button",
+              "value": "true",
+              "style": "primary"
+            },
+            {
+              "name": "confirmation",
+              "text": "No",
+              "type": "button",
+              "value": "false",
+              "style": "danger"
+            }
+          ]
+        }
+      ]
+    }
+  )
+};
+
+function reminderConfirm(message, data) {
+  web.chat.postMessage(message.channel,
+    `Would you like me to remind you ${data.result.parameters.description} ${data.result.parameters.date}?`,
+    {
+      "attachments": [
+        {
+          "fields": [
+            {
+              "title": "subject",
+              "value": data.result.parameters.description
+            },
+            {
+              "title": "date",
+              "value": data.result.parameters.date
+            }
+          ],
+          "text": "Please, confirm.",
+          "fallback": "You are unable to add a new Calendar event.",
+          "callback_id": "reminder",
+          "color": "#3AA3E3",
+          "attachment_type": "default",
+          "actions": [
+            {
+              "name": "confirmation",
+              "text": "Yes",
+              "type": "button",
+              "value": "true",
+              "style": "primary"
+            },
+            {
+              "name": "confirmation",
+              "text": "No",
+              "type": "button",
+              "value": "false",
+              "style": "danger"
+            }
+          ]
+        }
+      ]
+    }
+  )
+};
+function getMentions(message){
+  let inviteeIds = {};
+  let regExp = [/<@(\w+)>/g];
+  let currId = regExp.exec(message.text);
+  while(currId !== null) {
+    if (inviteeIds.hasOwnProperty(currId[1])){
+      inviteeIds[currId[1]] = '';
+    }
+    currId = regExp.exec(message.text);
+  }
+  Object.keys(inviteeIds).forEach((user)=>{
+  User.find({slackId: user})
+  .then((slackUser)=>{
+  inviteeIds[user] = slackUser.username;
+  })
+  });
+  return inviteeIds;
 }
 
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
@@ -75,6 +148,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
+
     User.findOrCreate(message.user)
     .then(function(user){
       //if(user.googleCalAccount.accessToken.length > 0){
