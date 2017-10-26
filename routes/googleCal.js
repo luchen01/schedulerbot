@@ -16,7 +16,7 @@ function getAuthClient() {
 }
 
 module.exports = {
-  generateAuthUrl() {
+  generateAuthUrl(slackId) {
     return getAuthClient().generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
@@ -49,11 +49,11 @@ module.exports = {
         resource: {
           summary: title,
           start: {
-            date,
+            dateTime: date,
             'timeZone': 'America/Los_Angeles',
           },
           end: {
-            date,
+            dateTime: date,
             'timeZone': 'America/Los_Angeles'
           }
         }
