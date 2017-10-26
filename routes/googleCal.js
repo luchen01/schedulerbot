@@ -11,11 +11,7 @@ function getAuthClient() {
   return new OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-<<<<<<< HEAD
-    process.env.DOMAIN + '/google/callback'
-=======
     `${process.env.DOMAIN}/google/callback`
->>>>>>> 8b0b5c651d08df81349d75baca164a59435960b9
   );
 }
 
