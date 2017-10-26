@@ -26,50 +26,40 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.get('/reminder', function(req, res){
-//   res.send(res);
-// })
 app.get('/setup', function(req, res){
-  console.log("inside setup");
   if(req.query.slackId){
-    res.redirect(google.generateAuthUrl(req.query.slackId));
+    res.redirect(google.generateAuthUrl());
   }
-});
-
-app.get('/google/callback', function(req, res) {
-  let user;
+})
+app.get('/google/callback', function(req, res){
+  var user;
+  var tokens;
+  var subject;
+  var date;
   User.findOne({slackId: req.query.state})
   .then(function(u){
     user = u;
     return google.getToken(req.query.code)
   })
   .then(function(t){
-    console.log(t);
-    // user.googleCalAccount.accessToken = t.access_token;
-    // user.googleCalAccount.refreshToken = t.refresh_token;
-    user.googleCalAccount = t;
+
+    tokens = t;
+    user.googleCalAccount.accessToken = t;
     return user.save();
   })
   .then(function(){
-    res.redirect('https://calendar.google.com/calendar/render?tab=mc#main_7');
+    Task.findOne({requesterId: user.slackId}).populate('requesterId')
+    .then(function(err, task) {
+      subject = task
+    })
+    return google.createCalendarEvent(code, 'NEW event', "2017-10-25");
+  })
+  .then(function(){
+    res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
   })
   .catch((err)=>{
     console.log("Error with google callback", err);
   });
-  // var subject;
-  // var date;
-  // .then(function(){
-  //     return Task.findOne({requesterId: user._id})
-  //     .exec(function(err, task){
-  //       if(err){
-  //         console.log(err)
-  //       }
-  //       console.log('task', task);
-  //       subject = task.subject;
-  //       date = task.day;
-  //       google.createCalendarEvent(tokens, subject, date)
-  // })
-  //     })
 });
 
 app.post('/messagesAction', (req, res) =>{

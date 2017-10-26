@@ -47,7 +47,13 @@ const meetingSchema = new Schema({
 });
 
 const userSchema = new Schema({
-  googleCalAccount:{},
+  googleCalAccount: {
+    accessToken: {
+      type: String,
+      // unique: true,
+      // required: true,
+    },
+  },
   slackId: {
     type: String,
     required: true,
