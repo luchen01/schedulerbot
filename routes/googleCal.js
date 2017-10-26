@@ -20,7 +20,8 @@ module.exports = {
     return getAuthClient().generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
-      scope
+      scope,
+      state: slackId
     });
   },
 

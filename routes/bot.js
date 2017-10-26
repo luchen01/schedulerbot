@@ -13,7 +13,6 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 
 function handleDialogflowConvo(message) {
-  // console.log('MESSAGE', message);
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
     var { data } = res;
@@ -61,10 +60,6 @@ function handleDialogflowConvo(message) {
 
       })
 
-      // fetch("https://pinocchiobot.herokuapp.com/messages_actions", {
-      //   method: 'GET',
-      //   data:
-      // })
       // web.chat.postMessage(message.channel,
       //   `You asked me to remind you to ${data.result.parameters.description} on ${data.result.parameters.date}`);
       //  google.createCalendarEvent(token, data.result.parameters.description, data.result.parameters.date);
@@ -81,7 +76,11 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     return;
   } else {
     User.findOrCreate(message.user)
-    .then( function(resp){handleDialogflowConvo(message)})
+    .then(function(user){
+      if(user.googleCalAccount.accessToken.length > 0){
+        web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me acceses to your Google Calendar https://localhost:3000/setup?slackId=${message.user}`);
+      }
+    })
     .catch(function(err){
       console.log('Error', err)
     })

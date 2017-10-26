@@ -37,7 +37,9 @@ app.get('/setup', function(req, res){
 app.get('/google/callback', function(req, res){
   var user;
   var tokens;
-  User.findOne({slackId: req.query.code})
+  var subject;
+  var date;
+  User.findOne({slackId: req.query.state})
   .then(function(u){
     user = u;
     return google.getToken(req.query.code)
@@ -48,8 +50,11 @@ app.get('/google/callback', function(req, res){
     return user.save();
   })
   .then(function(){
-    Task.findOne({})
-    return google.createCalendarEvent(code, 'NEW event', "2017-10-25")
+    Task.findOne({requesterId: user.slackId}).populate('requesterId')
+    .then(function(err, task){
+      subject = task.
+    })
+    return google.createCalendarEvent(code, 'NEW event', "2017-10-25");
   })
   .then(function(){
     res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
@@ -67,14 +72,14 @@ app.post('/messagesAction', (req, res) =>{
   var newTask = new Task({
     subject: data.original_message.attachments[0].fields[0].value,
     day:data.original_message.attachments[0].fields[1].value,
-    requesterId:data.user.id
+    requesterId: data.user.id
   });
 
   newTask.save(function(err){
     if(err){
       console.log("err", err)
     }
-    res.send("task created!");
+    res.redirect('/setup');
   })
 
 })
