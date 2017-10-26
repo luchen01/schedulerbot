@@ -6,7 +6,6 @@ var rtm = new RtmClient(bot_token);
 var web = new WebClient(bot_token);
 var {Task, User, Meeting, InviteRequest} = require('../models/models');
 
-
 rtm.start();
 //The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload if you want to cache it
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
@@ -41,7 +40,6 @@ function handleDialogflowConvo(message) {
     );
   });
 };
-
 function scheduleConfirm(message, data) {
   let invitees = data.result.parameters.invitees.join(', ');
 
@@ -67,6 +65,48 @@ function scheduleConfirm(message, data) {
           "text": "Please, confirm.",
           "fallback": "You are unable to add a new Calendar event.",
           "callback_id": "schedule",
+          "color": "#3AA3E3",
+          "attachment_type": "default",
+          "actions": [
+            {
+              "name": "confirmation",
+              "text": "Yes",
+              "type": "button",
+              "value": "true",
+              "style": "primary"
+            },
+            {
+              "name": "confirmation",
+              "text": "No",
+              "type": "button",
+              "value": "false",
+              "style": "danger"
+            }
+          ]
+        }
+      ]
+    }
+  )
+};
+function reminderConfirm(message, data) {
+  web.chat.postMessage(message.channel,
+    `Would you like me to remind you ${data.result.parameters.description} ${data.result.parameters.date}?`,
+    {
+      "attachments": [
+        {
+          "fields": [
+            {
+              "title": "subject",
+              "value": data.result.parameters.description
+            },
+            {
+              "title": "date",
+              "value": data.result.parameters.date
+            }
+          ],
+          "text": "Please, confirm.",
+          "fallback": "You are unable to add a new Calendar event.",
+          "callback_id": "reminder",
           "color": "#3AA3E3",
           "attachment_type": "default",
           "actions": [
@@ -120,14 +160,12 @@ function getMentions(message){
   console.log('err in getMentions', err)
 })
 }
-
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   if (! message.user) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-    console.log(message);
-    User.findOrCreate(message.user, message.username);
+    User.findOrCreate(message.user)
     .then( function(resp){handleDialogflowConvo(message)})
     .catch(function(err){
       console.log('Error', err)

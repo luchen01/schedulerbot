@@ -13,7 +13,6 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 
 function handleDialogflowConvo(message) {
-  // console.log('MESSAGE', message);
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
     var { data } = res;
@@ -125,7 +124,6 @@ function reminderConfirm(message, data) {
     }
   )
 };
-
 function getMentions(message){
   let inviteeIds = {};
   let regExp = [/<@(\w+)>/g];
@@ -152,7 +150,11 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   } else {
 
     User.findOrCreate(message.user)
-    .then( function(resp){handleDialogflowConvo(message)})
+    .then(function(user){
+      if(user.googleCalAccount.accessToken.length > 0){
+        web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me acceses to your Google Calendar https://localhost:3000/setup?slackId=${message.user}`);
+      }
+    })
     .catch(function(err){
       console.log('Error', err)
     })

@@ -31,10 +31,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // })
 app.get('/setup', function(req, res){
   if(req.query.slackId){
-    res.redirect(google.generateAuthUrl(req.query.slackId));
+    res.redirect(google.generateAuthUrl());
   }
 })
-
 app.get('/google/callback', function(req, res){
   var user;
   var tokens;
@@ -47,7 +46,7 @@ app.get('/google/callback', function(req, res){
   })
   .then(function(t){
     tokens = t;
-    user.googleCalAccount.accessToken = tokens.access_token;
+    user.googleCalAccount.accessToken = t;
     return user.save();
   })
   .then(function(){
@@ -63,7 +62,7 @@ app.get('/google/callback', function(req, res){
       })
   })
   .then(function(){
-    res.redirect('https://calendar.google.com/calendar/');
+    res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
   })
   .catch((err)=>{
     if(err){
@@ -140,6 +139,10 @@ if(data.original_message.attachments[0].callback_id ==="reminder"){
 
 app.use('/', index);
 app.use('/users', users);
+
+app.get('/setup', function(req, res, next){
+  res.send('thank you for trying to setup')
+})
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
