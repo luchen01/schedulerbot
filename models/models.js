@@ -26,10 +26,7 @@ const meetingSchema = new Schema({
     type: Date,
     required: true,
   },
-  subject: {
-    type: String,
-    default: 'Meeting',
-  },
+  subject: String,
   location: {
     latitude: Number,
     longitude: Number,
@@ -47,7 +44,13 @@ const meetingSchema = new Schema({
 });
 
 const userSchema = new Schema({
-  googleCalAccount: {},
+  googleCalAccount: {
+    accessToken: {
+      type: String,
+      // unique: true,
+      // required: true,
+    },
+  },
   slackId: {
     type: String,
     required: true,
