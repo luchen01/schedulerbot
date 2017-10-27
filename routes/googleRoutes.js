@@ -8,7 +8,7 @@ router.get('/setup', function(req, res){
   }
 });
 
-app.get('/google/callback', function(req, res){
+router.get('/google/callback', function(req, res){
   let user;
   User.findOne({slackId: req.query.state})
   .then(function(u){
