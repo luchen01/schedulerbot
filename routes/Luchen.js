@@ -20,7 +20,6 @@ function handleDialogflowConvo(message) {
     {dialogflow.interpretUserMessage(newText, message.user)
     .then(function(res) {
       var { data } = res;
-      console.log(data);
       if (data.result.metadata.intentName === 'Remind') {
         if (data.result.actionIncomplete) {
           web.chat.postMessage(message.channel, data.result.fulfillment.speech);
