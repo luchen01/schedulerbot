@@ -165,10 +165,17 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-    User.findOrCreate(message.user)
-    .then( function(resp){handleDialogflowConvo(message)})
-    .catch(function(err){
-      console.log('Error', err)
+    var userInfo = (ui) => web.users.info(ui);
+    userInfo(message.user)
+    .then((res) => {
+        User.findOrCreate(message.user, res.user.name, res.user.profile.email)
+        .then(function(resp){handleDialogflowConvo(message)})
+        .catch(function(err){
+          console.log('Error', err)
+        })
+    })
+    .catch((err)=>{
+      console.log("handleDialogflowConvo",err);
     })
   }
 });

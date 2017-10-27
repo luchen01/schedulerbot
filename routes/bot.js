@@ -148,8 +148,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-
-    User.findOrCreate(message.user)
+    var userInfo = JSON.parse(web.users.info(message.user));
+    console.log(userInfo);
+    User.findOrCreate(message.user, userInfo.name)
     .then(function(user){
       //if(user.googleCalAccount.accessToken.length > 0){
       //  web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me acceses to your Google Calendar https://localhost:3000/setup?slackId=${message.user}`);

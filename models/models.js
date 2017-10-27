@@ -79,13 +79,13 @@ const inviteRequestSchema = new Schema({
   confirmed: Boolean,
 });
 
-userSchema.statics.findOrCreate = function(slackId, slackUsername){
+userSchema.statics.findOrCreate = function(slackId, slackUsername, slackEmail){
   return User.findOne({slackId})
     .then(function(user){
       if(user){
         return user;
       } else {
-        return new User({slackId, slackUsername}).save();
+        return new User({slackId, slackUsername, slackEmail}).save();
       }
     })
 };
