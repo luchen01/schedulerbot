@@ -1,8 +1,12 @@
 var express = require('express');
 var router = express();
-var {Task, User, Meeting, InviteRequest} = require('./models/models');
+var {Task, User, Meeting, InviteRequest} = require('../models/models');
 
-app.post('/messagesAction', (req, res) =>{
+router.get('/', function(req, res, next) {
+  res.redirect('https://slack.com/oauth/authorize');
+});
+
+router.post('/messagesAction', (req, res) =>{
   const data = JSON.parse(req.body.payload);
   const fieldsArr = data.original_message.attachments[0].fields;
   let user;

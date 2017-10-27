@@ -12,42 +12,8 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
   console.log(`Logged in as ${rtmStartData.self.name} of team ${rtmStartData.team.name}, but not yet connected to a channel`);
 });
 
-function handleDialogflowConvo(message) {
-//  const newText = getMentions(message);
-//  console.log(newText);
-  getMentions(message)
-  .then((newText) =>
-    {dialogflow.interpretUserMessage(newText, message.user)
-    .then(function(res) {
-      var { data } = res;
-      if (data.result.metadata.intentName === 'Remind') {
-        if (data.result.actionIncomplete) {
-          web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-        } else {
-          reminderConfirm(message, data);
-        }
-      } else {
-        if (data.result.actionIncomplete) {
-          web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-        } else {
-          scheduleConfirm(message, data);
-        }
-      }
-    })
-    .catch(function(err) {
-      console.log('Error sending message to Dialogflow', err);
-      web.chat.postMessage(message.channel,
-        `Failed to understand your request.`
-      );
-    });
-  }).catch((err)=>{
-    console.log(err);
-  })
-
-};
 function scheduleConfirm(message, data) {
   let invitees = data.result.parameters.invitees.join(', ');
-
   web.chat.postMessage(message.channel,
     `Would you like me to schedule you a meeting with ${invitees} on ${data.result.parameters.date} at ${data.result.parameters.time}?`,
     {
@@ -93,6 +59,7 @@ function scheduleConfirm(message, data) {
     }
   )
 };
+
 function reminderConfirm(message, data) {
   web.chat.postMessage(message.channel,
     `Would you like me to remind you ${data.result.parameters.description} ${data.result.parameters.date}?`,
@@ -175,22 +142,64 @@ function getMentions(message){
   })
   })
 }
+
+function handleDialogflowConvo(message) {
+  getMentions(message)
+  .then((newText) => {
+    dialogflow.interpretUserMessage(newText, message.user)
+    .then(function(res) {
+      var userInfo = (ui) => web.users.info(ui);
+      const { data } = res;
+      const i = data.result.metadata.intentName;
+      if (i === 'Remind' || i === 'Meeting.add') {
+        userInfo(message.user)
+        .then((res) => {
+            User.findOrCreate(message.user, res.user.name, res.user.profile.email)
+            .then((u) => {
+              if (u.googleCalAccount) {
+                return u;
+              } else {
+                return web.chat.postMessage(message.channel, `Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${message.user}`);
+              }
+            })
+            .then((resp) => {
+              if (resp.slackId) {
+                if (data.result.actionIncomplete) {
+                  web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+                } else {
+                  if (i === 'Remind') reminderConfirm(message, data);
+                  if (i === 'Meeting.add') scheduleConfirm(message, data);
+                }
+              }
+            })
+            .catch(err => {
+              console.log('Error finding or creating user', err);
+            })
+        })
+        .catch((err)=>{
+          console.log("Users Info failed: ",err);
+        })
+
+      }
+    })
+    .catch(function(err) {
+      console.log('Error sending message to Dialogflow', err);
+      web.chat.postMessage(message.channel,
+        `Failed to understand your request.`
+      );
+    });
+  })
+  .catch((err) => {
+    console.log("Get Mentions failed: ",err);
+  })
+
+};
+
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   if (! message.user) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-    var userInfo = (ui) => web.users.info(ui);
-    userInfo(message.user)
-    .then((res) => {
-        User.findOrCreate(message.user, res.user.name, res.user.profile.email)
-        .then(function(resp){handleDialogflowConvo(message)})
-        .catch(function(err){
-          console.log('Error', err)
-        })
-    })
-    .catch((err)=>{
-      console.log("handleDialogflowConvo",err);
-    })
+    handleDialogflowConvo(message);
   }
 });
