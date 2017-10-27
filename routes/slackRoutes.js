@@ -5,6 +5,7 @@ var {Task, User, Meeting, InviteRequest} = require('./models/models');
 app.post('/messagesAction', (req, res) =>{
   const data = JSON.parse(req.body.payload);
   const fieldsArr = data.original_message.attachments[0].fields;
+
   let user;
   // let event;
   // console.log(data);
@@ -34,6 +35,7 @@ app.post('/messagesAction', (req, res) =>{
         day: new Date(data.original_message.attachments[0].fields[1].value),
         requesterId: user.id,
         createdAt: new Date(),
+        confirmed: false,
         // googleCalFields: ,
       });
       break;
@@ -42,7 +44,28 @@ app.post('/messagesAction', (req, res) =>{
     }
     return temp.save()
   })
+  .then(meeting => {
+    if (data.callback_id === 'schedule') {
+      var inviteeName = data.original_message.attachments[0].fields[0].value;
+      createInvite(inviteeName, meeting)
+    }
+  })
   .catch(err => console.log(err));
 });
+
+function createInvite(inviteeName, meeting){
+      return inviteeName.forEach((invitee)=>{
+        User.findOne({slackUsername: invitee})
+        .then(user=>{
+          var newRequest = new InviteRequest({
+            eventId: meeting._id,
+            inviteeId: user._id,
+            requesterId: meeting.requesterId,
+            confirmed: false,
+          });
+          newRequest.save()
+})
+})
+};
 
 module.exports = router;
