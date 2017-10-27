@@ -13,37 +13,33 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 
 function handleDialogflowConvo(message) {
-//  const newText = getMentions(message);
-//  console.log(newText);
-  getMentions(message)
-  .then((newText) =>
-    {dialogflow.interpretUserMessage(newText, message.user)
-    .then(function(res) {
-      var { data } = res;
-      if (data.result.metadata.intentName === 'Remind') {
-        if (data.result.actionIncomplete) {
-          web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-        } else {
-          reminderConfirm(message, data);
-        }
+  // console.log('MESSAGE', message);
+  const newText = getMentions(message);
+  console.log(newText);
+  dialogflow.interpretUserMessage(newText, message.user)
+  .then(function(res) {
+    var { data } = res;
+    console.log(data);
+    if (data.result.metadata.intentName === 'Remind') {
+      if (data.result.actionIncomplete) {
+        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
       } else {
-        if (data.result.actionIncomplete) {
-          web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-        } else {
-          scheduleConfirm(message, data);
-        }
+        reminderConfirm(message, data);
       }
-    })
-    .catch(function(err) {
-      console.log('Error sending message to Dialogflow', err);
-      web.chat.postMessage(message.channel,
-        `Failed to understand your request.`
-      );
-    });
-  }).catch((err)=>{
-    console.log(err);
+    } else {
+      if (data.result.actionIncomplete) {
+        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+      } else {
+        scheduleConfirm(message, data);
+      }
+    }
   })
-
+  .catch(function(err) {
+    console.log('Error sending message to Dialogflow', err);
+    web.chat.postMessage(message.channel,
+      `Failed to understand your request.`
+    );
+  });
 };
 function scheduleConfirm(message, data) {
   let invitees = data.result.parameters.invitees.join(', ');
@@ -137,43 +133,33 @@ function reminderConfirm(message, data) {
 };
 
 function getMentions(message){
-  return new Promise(function(resolve, reject){
-    let newText;
-    let inviteeIds = {};
-    let regExp = /<@(\w+)>/g;
-    let currId = regExp.exec(message.text);
-    console.log('currId', currId);
-    while(currId !== null) {
-      console.log('inside while loop')
-      if (!inviteeIds.hasOwnProperty(currId[1])){
-        inviteeIds[currId[1]] = '';
-      }
-      currId = regExp.exec(message.text);
+  let inviteeIds = {};
+  let regExp = /<@(\w+)>/g;
+  let currId = regExp.exec(message.text);
+  console.log('currId', currId);
+  while(currId !== null) {
+    console.log('inside while loop')
+    if (!inviteeIds.hasOwnProperty(currId[1])){
+      inviteeIds[currId[1]] = '';
     }
-    console.log('before promise all inviteeIds', inviteeIds);
-    Promise.all(Object.keys(inviteeIds).map((user)=>{
-      console.log('inside For Each user', user);
-      return User.findOne({slackId: user}, (err, slackUser)=>{
-          if(err){
-            console.log("Unable to find user",err);
-          }
-          inviteeIds[user] = slackUser.slackUsername;
-          });
-    }))
-  .then(function(){
-    newText = message.text.slice().split(' ').map((word) => {
-      if(word[0] === '<'){
-        word = word.slice(2, word.length -1);
-      }
-      return (inviteeIds.hasOwnProperty(word)) ?  inviteeIds[word] : word;
-    }).join(' ');
-    resolve(newText);
-  })
-  .catch(function(err){
-    console.log('err in getMentions', err)
-    reject(err);
-  })
-  })
+    currId = regExp.exec(message.text);
+  }
+  console.log('before promise all inviteeIds', inviteeIds);
+  Promise.all(Object.keys(inviteeIds).map((user)=>{
+    console.log('inside For Each user', user);
+    return User.findOne({slackId: user}, function(err, slackUser){
+      console.log('SlackUser', slackUser);
+    inviteeIds[user] = slackUser.slackUsername;
+    })
+  }))
+.then(function(){
+  return message.text.slice().split(' ').map((word) => {
+    return (inviteeIds.hasOwnProperty(word)) ? inviteeIds[word] : word;
+  }).join(' ');
+})
+.catch(function(err){
+  console.log('err in getMentions', err)
+})
 }
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   if (! message.user) {
