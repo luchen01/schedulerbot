@@ -4,9 +4,10 @@ var {Task, User, Meeting, InviteRequest} = require('./models/models');
 
 router.get('/setup', function(req, res){
   if(req.query.slackId){
-    res.redirect(google.generateAuthUrl());
+    res.redirect(google.generateAuthUrl(req.query.slackId));
   }
 })
+
 router.get('/google/callback', function(req, res){
   var user;
   var tokens;
@@ -41,5 +42,6 @@ router.get('/google/callback', function(req, res){
   .catch((err)=>{
     console.log("Error with google callback", err);
   });
+})
 
 module.exports = router;
