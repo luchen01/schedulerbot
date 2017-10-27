@@ -156,7 +156,7 @@ function handleDialogflowConvo(message) {
         .then((res) => {
           User.findOrCreate(message.user, res.user.name, res.user.profile.email)
           .then((u) => {
-            if (u.googleCalAccount.access_token) {
+            if (u.googleCalAccount) {
               return u;
             } else {
               return web.chat.postMessage(message.channel, `Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${message.user}`);
