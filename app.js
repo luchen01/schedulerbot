@@ -28,31 +28,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/setup', function(req, res){
   if(req.query.slackId){
-    res.redirect(google.generateAuthUrl());
+    res.redirect(google.generateAuthUrl(req.query.slackId));
   }
 })
 app.get('/google/callback', function(req, res){
-  var user;
-  var tokens;
-  var subject;
-  var date;
+  let user;
   User.findOne({slackId: req.query.state})
   .then(function(u){
     user = u;
     return google.getToken(req.query.code)
   })
   .then(function(t){
-
-    tokens = t;
-    user.googleCalAccount.accessToken = t;
+    user.googleCalAccount = t;
     return user.save();
-  })
-  .then(function(){
-    Task.findOne({requesterId: user.slackId}).populate('requesterId')
-    .then(function(err, task) {
-      subject = task
-    })
-    return google.createCalendarEvent(code, 'NEW event', "2017-10-25");
   })
   .then(function(){
     res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
@@ -71,6 +59,7 @@ app.post('/messagesAction', (req, res) =>{
   User.findOne({slackId: data.user.id})
   .then(u => {
     user = u;
+    console.log(user);
     return google.createCalendarEvent(user.googleCalAccount,
       fieldsArr[0].value,
       new Date(fieldsArr[1].value).toISOString()
