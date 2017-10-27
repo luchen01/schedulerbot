@@ -47,9 +47,7 @@ const meetingSchema = new Schema({
 });
 
 const userSchema = new Schema({
-  googleCalAccount: {
-    accessToken: String,
-  },
+  googleCalAccount: {},
   slackId: {
     type: String,
     required: true,
@@ -78,13 +76,13 @@ const inviteRequestSchema = new Schema({
   confirmed: Boolean,
 });
 
-userSchema.statics.findOrCreate = function(slackId){
+userSchema.statics.findOrCreate = function(slackId, slackUsername, slackEmail){
   return User.findOne({slackId})
     .then(function(user){
       if(user){
         return user;
       } else {
-        return new User({slackId}).save();
+        return new User({slackId, slackUsername, slackEmail}).save();
       }
     })
 };

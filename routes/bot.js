@@ -13,32 +13,155 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 
 function handleDialogflowConvo(message) {
-  // console.log('MESSAGE', message);
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
     console.log(res);
     var { data } = res;
+<<<<<<< HEAD
     console.log(data);
     if (data.callback_id === 'reminder') {
       if (data.result.actionIncomplete) {
         web.chat.postMessage(message.channel, data.result.fulfillment.speech);
       } else {
         reminderConfirm();
+=======
+    if (data.result.metadata.intentName === 'Remind') {
+      if (data.result.actionIncomplete) {
+        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+      } else {
+        console.log("message in reminderConfirm", data);
+        reminderConfirm(message, data);
+>>>>>>> 000980bdab36915c32835a4d6d80ef8699b6f441
       }
     } else {
       if (data.result.actionIncomplete) {
         web.chat.postMessage(message.channel, data.result.fulfillment.speech);
       } else {
+<<<<<<< HEAD
         // scheduleConfirm();
+=======
+        scheduleConfirm(message, data);
+>>>>>>> 000980bdab36915c32835a4d6d80ef8699b6f441
       }
     }
   })
   .catch(function(err) {
+<<<<<<< HEAD
     console.log('Error sending message to Dialogflow');
     web.chat.postMessage(message.channel,
       `Failed to understand your request.`
     );
+=======
+    console.log('Error sending message to Dialogflow', err);
+    web.chat.postMessage(message.channel,
+      `Failed to understand your request.`
+    );
   });
+};
+
+function scheduleConfirm(message, data) {
+  web.chat.postMessage(message.channel,
+    `Would you like me to schedule you ${data.result.parameters.description} ${data.result.parameters.date}?`,
+    {
+      "attachments": [
+        {
+          "fields": [
+            {
+              "title": "subject",
+              "value": data.result.parameters.description
+            },
+            {
+              "title": "date",
+              "value": data.result.parameters.date
+            }
+          ],
+          "text": "Please, confirm.",
+          "fallback": "You are unable to add a new Calendar event.",
+          "callback_id": "reminder",
+          "color": "#3AA3E3",
+          "attachment_type": "default",
+          "actions": [
+            {
+              "name": "confirmation",
+              "text": "Yes",
+              "type": "button",
+              "value": "true",
+              "style": "primary"
+            },
+            {
+              "name": "confirmation",
+              "text": "No",
+              "type": "button",
+              "value": "false",
+              "style": "danger"
+            }
+          ]
+        }
+      ]
+    }
+  )
+};
+
+function reminderConfirm(message, data) {
+  web.chat.postMessage(message.channel,
+    `Would you like me to remind you ${data.result.parameters.description} ${data.result.parameters.date}?`,
+    {
+      "attachments": [
+        {
+          "fields": [
+            {
+              "title": "subject",
+              "value": data.result.parameters.description
+            },
+            {
+              "title": "date",
+              "value": data.result.parameters.date
+            }
+          ],
+          "text": "Please, confirm.",
+          "fallback": "You are unable to add a new Calendar event.",
+          "callback_id": "reminder",
+          "color": "#3AA3E3",
+          "attachment_type": "default",
+          "actions": [
+            {
+              "name": "confirmation",
+              "text": "Yes",
+              "type": "button",
+              "value": "true",
+              "style": "primary"
+            },
+            {
+              "name": "confirmation",
+              "text": "No",
+              "type": "button",
+              "value": "false",
+              "style": "danger"
+            }
+          ]
+        }
+      ]
+    }
+  )
+};
+function getMentions(message){
+  let inviteeIds = {};
+  let regExp = [/<@(\w+)>/g];
+  let currId = regExp.exec(message.text);
+  while(currId !== null) {
+    if (inviteeIds.hasOwnProperty(currId[1])){
+      inviteeIds[currId[1]] = '';
+    }
+    currId = regExp.exec(message.text);
+  }
+  Object.keys(inviteeIds).forEach((user)=>{
+  User.find({slackId: user})
+  .then((slackUser)=>{
+  inviteeIds[user] = slackUser.username;
+  })
+>>>>>>> 000980bdab36915c32835a4d6d80ef8699b6f441
+  });
+  return inviteeIds;
 }
 
 function scheduleConfirm() {
@@ -132,8 +255,14 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-    User.findOrCreate(message.user)
-    .then( function(resp){handleDialogflowConvo(message)})
+    var userInfo = JSON.parse(web.users.info(message.user));
+    console.log(userInfo);
+    User.findOrCreate(message.user, userInfo.name)
+    .then(function(user){
+      //if(user.googleCalAccount.accessToken.length > 0){
+      //  web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me acceses to your Google Calendar https://localhost:3000/setup?slackId=${message.user}`);
+    //  }
+    })
     .catch(function(err){
       console.log('Error', err)
     })

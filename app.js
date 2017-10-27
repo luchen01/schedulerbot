@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var {Task, User, Meeting, InviteRequest} = require('./models/models');
 
-require('./routes/bot');
+require('./routes/Luchen');
 var google = require('./routes/googleCal');
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -30,14 +30,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 //   res.send(res);
 // })
 app.get('/setup', function(req, res){
-  console.log("inside setup");
   if(req.query.slackId){
-    res.redirect(google.generateAuthUrl(req.query.slackId));
+    res.redirect(google.generateAuthUrl());
   }
 })
-
 app.get('/google/callback', function(req, res){
-  console.log("slackId", req.query.state);
   var user;
   var tokens;
   var subject;
@@ -49,7 +46,7 @@ app.get('/google/callback', function(req, res){
   })
   .then(function(t){
     tokens = t;
-    user.googleCalAccount.accessToken = t.accessToken;
+    user.googleCalAccount.accessToken = t;
     return user.save();
   })
   .then(function(){
@@ -58,14 +55,14 @@ app.get('/google/callback', function(req, res){
         if(err){
           console.log(err)
         }
-        console.log('task', task);
         subject = task.subject;
         date = task.day;
+        console.log('day', date);
         google.createCalendarEvent(tokens, subject, date)
       })
   })
   .then(function(){
-    res.redirect('https://calendar.google.com/calendar/render?tab=mc#main_7');
+    res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
   })
   .catch((err)=>{
     if(err){
@@ -75,26 +72,69 @@ app.get('/google/callback', function(req, res){
 })
 
 app.post('/messagesAction', (req, res) =>{
-  var data = JSON.parse(req.body.payload);
-  console.log("inside original message fields",data);
-  User.findOne({slackId: data.user.id})
-  .then(function(user){
-    console.log('find slack user', user)
-    var newTask = new Task({
-      subject: data.original_message.attachments[0].fields[0].value,
-      day: new Date(data.original_message.attachments[0].fields[1].value),
-      requesterId:user.id
-    });
-    newTask.save(function(err){
-      if(err){
-        console.log("err", err)
-      }
-      res.send(`Hello, please give access to your Google Calender https://6c2c2e56.ngrok.io/setup?slackId=${data.user.id}`);
+var data = JSON.parse(req.body.payload);
+console.log("MESSAGES ACTION DATA", data);
+if(data.original_message.attachments[0].callback_id === 'schedule'){
+var inviteeName = data.original_message.attachments[0].fields[0].value;
+var date = new Date(data.original_message.attachments[0].fields[1].value);
+var time = data.original_message.attachments[0].fields[2].value;
+
+var newMeeting = new Meeting({
+  day: date,
+  subject: "Meeting",
+  meetingLength: "30",
+  confirmed: false,
+  createdAt: new Date(),
+  requesterId: data.user.id
+});
+
+  newMeeting.save()
+    .then((meeting)=>{
+      return inviteeName.forEach((invitee)=>{
+        User.findOne({slackUsername: invitee})
+        .then(user=>{
+          var newRequest = new InviteRequest({
+            eventId: meeting._id,
+            inviteeId: user._id,
+            requesterId: meeting.requesterId,
+            confirmed: false,
+          });
+          newRequest.save()
+        })
+        .catch(function(err){
+          console.log('err saving requests', err)
+        })
+      })
     })
-  })
-  .catch(function(err){
-    console.log('err in messagesAction', err)
-  })
+    .then(()=>{
+      res.send('Meeting created!')
+    })
+    .catch(function(err){
+      console.log('err creating meetings', err)
+    })
+}
+
+if(data.original_message.attachments[0].callback_id ==="reminder"){
+  var subject = data.original_message.attachments[0].fields[0].value;
+  var day = new Date(data.original_message.attachments[0].fields[1].value);
+    User.findOne({slackId: data.user.id})
+    .then(function(user){
+      var newTask = new Task({
+        subject: subject,
+        day: day,
+        requesterId:user.id
+      });
+      newTask.save(function(err){
+        if(err){
+          console.log("err", err)
+        }
+          res.send(`Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${data.user.id}`);
+      })
+    })
+    .catch(function(err){
+      console.log('err in messagesAction', err)
+    })
+  }
 })
 
 app.use('/', index);
