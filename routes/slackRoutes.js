@@ -43,6 +43,7 @@ router.post('/messagesAction', (req, res) =>{
       console.log('WTF YOU SHOULDNT BE HERE');
     }
     return temp.save()
+          .then(function(){res.send('Calendar event created!')})
   })
   .then(meeting => {
     if (data.callback_id === 'schedule') {
@@ -68,7 +69,10 @@ function createInvite(inviteeName, meeting){
             confirmed: false,
           });
           newRequest.save()
-})
+        })
+      .catch(function(err){
+        console.log(err)
+  })
 })
 };
 
