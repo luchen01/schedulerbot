@@ -40,6 +40,8 @@ module.exports = {
   },
 
   createCalendarEvent(tokens, title, date) {
+    console.log('create calendar event', tokens);
+
     var client = getAuthClient();
     client.setCredentials(tokens);
     return new Promise(function(resolve, reject) {
