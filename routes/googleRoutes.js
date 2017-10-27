@@ -8,7 +8,7 @@ router.get('/setup', function(req, res){
   if(req.query.slackId){
     res.redirect(google.generateAuthUrl(req.query.slackId));
   }
-})
+});
 
 router.get('/google/callback', function(req, res){
   let user;
@@ -28,5 +28,4 @@ router.get('/google/callback', function(req, res){
     console.log("Error with google callback", err);
   });
 });
-
 module.exports = router;
