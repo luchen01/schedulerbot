@@ -14,6 +14,7 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 
 function scheduleConfirm(message, data) {
   let invitees = data.result.parameters.invitees.join(', ');
+  console.log("data inside schedule confirm", data);
   web.chat.postMessage(message.channel,
     `Would you like me to schedule you a meeting with ${invitees} on ${data.result.parameters.date} at ${data.result.parameters.time}?`,
     {
@@ -124,6 +125,7 @@ function getMentions(message){
           if(err){
             console.log("Unable to find user",err);
           }
+          console.log('find slackuser', slackUser);
           inviteeIds[user] = slackUser.slackUsername;
           });
     }))
@@ -200,6 +202,13 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-    handleDialogflowConvo(message);
+    var userInfo = (ui) => web.users.info(ui);
+    userInfo(message.user)
+    .then((res) => {
+        return User.findOrCreate(message.user, res.user.name, res.user.profile.email)})
+    .then(() =>handleDialogflowConvo(message))
+    .catch(function(err){
+      console.log(err)
+    })
   }
 });

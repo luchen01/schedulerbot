@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express();
+var google = require('./googleCal');
 var {Task, User, Meeting, InviteRequest} = require('../models/models');
 
 router.post('/messagesAction', (req, res) =>{
@@ -46,7 +47,11 @@ router.post('/messagesAction', (req, res) =>{
   })
   .then(meeting => {
     if (data.callback_id === 'schedule') {
-      var inviteeName = data.original_message.attachments[0].fields[0].value;
+      var inviteeName = []
+      var invitee = data.original_message.attachments[0].fields[0].value;
+      inviteeName.push(invitee);
+      console.log('inviteeName', inviteeName);
+      console.log('data', data.original_message.attachments[0] );
       createInvite(inviteeName, meeting)
     }
   })

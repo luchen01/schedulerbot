@@ -51,11 +51,11 @@ module.exports = {
         resource: {
           summary: title,
           start: {
-            dateTime: date,
+            date,
             'timeZone': 'America/Los_Angeles',
           },
           end: {
-            dateTime: date,
+            date,
             'timeZone': 'America/Los_Angeles'
           }
         }
