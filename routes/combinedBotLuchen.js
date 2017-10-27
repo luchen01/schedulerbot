@@ -121,25 +121,25 @@ function getMentions(message){
     Promise.all(Object.keys(inviteeIds).map((user)=>{
       console.log('inside For Each user', user);
       return User.findOne({slackId: user}, (err, slackUser)=>{
-          if(err){
-            console.log("Unable to find user",err);
-          }
-          inviteeIds[user] = slackUser.slackUsername;
-          });
+        if(err){
+          console.log("Unable to find user",err);
+        }
+        inviteeIds[user] = slackUser.slackUsername;
+      });
     }))
-  .then(function(){
-    newText = message.text.slice().split(' ').map((word) => {
-      if(word[0] === '<'){
-        word = word.slice(2, word.length -1);
-      }
-      return (inviteeIds.hasOwnProperty(word)) ?  inviteeIds[word] : word;
-    }).join(' ');
-    resolve(newText);
-  })
-  .catch(function(err){
-    console.log('err in getMentions', err)
-    reject(err);
-  })
+    .then(function(){
+      newText = message.text.slice().split(' ').map((word) => {
+        if(word[0] === '<'){
+          word = word.slice(2, word.length -1);
+        }
+        return (inviteeIds.hasOwnProperty(word)) ?  inviteeIds[word] : word;
+      }).join(' ');
+      resolve(newText);
+    })
+    .catch(function(err){
+      console.log('err in getMentions', err)
+      reject(err);
+    })
   })
 }
 
@@ -154,27 +154,27 @@ function handleDialogflowConvo(message) {
       if (i === 'Remind' || i === 'Meeting.add') {
         userInfo(message.user)
         .then((res) => {
-            User.findOrCreate(message.user, res.user.name, res.user.profile.email)
-            .then((u) => {
-              if (u.googleCalAccount) {
-                return u;
+          User.findOrCreate(message.user, res.user.name, res.user.profile.email)
+          .then((u) => {
+            if (u.googleCalAccount) {
+              return u;
+            } else {
+              return web.chat.postMessage(message.channel, `Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${message.user}`);
+            }
+          })
+          .then((resp) => {
+            if (resp.slackId) {
+              if (data.result.actionIncomplete) {
+                web.chat.postMessage(message.channel, data.result.fulfillment.speech);
               } else {
-                return web.chat.postMessage(message.channel, `Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${message.user}`);
+                if (i === 'Remind') reminderConfirm(message, data);
+                if (i === 'Meeting.add') scheduleConfirm(message, data);
               }
-            })
-            .then((resp) => {
-              if (resp.slackId) {
-                if (data.result.actionIncomplete) {
-                  web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-                } else {
-                  if (i === 'Remind') reminderConfirm(message, data);
-                  if (i === 'Meeting.add') scheduleConfirm(message, data);
-                }
-              }
-            })
-            .catch(err => {
-              console.log('Error finding or creating user', err);
-            })
+            }
+          })
+          .catch(err => {
+            console.log('Error finding or creating user', err);
+          })
         })
         .catch((err)=>{
           console.log("Users Info failed: ",err);
