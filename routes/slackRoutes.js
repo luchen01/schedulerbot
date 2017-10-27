@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express();
-var {Task, User, Meeting, InviteRequest} = require('./models/models');
+var {Task, User, Meeting, InviteRequest} = require('../models/models');
 
 app.post('/messagesAction', (req, res) =>{
   const data = JSON.parse(req.body.payload);
