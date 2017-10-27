@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var {Task, User, Meeting, InviteRequest} = require('./models/models');
 
-require('./routes/Luchen');
+require('./routes/bot');
 var google = require('./routes/googleCal');
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -26,115 +26,73 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.get('/reminder', function(req, res){
-//   res.send(res);
-// })
 app.get('/setup', function(req, res){
   if(req.query.slackId){
-    res.redirect(google.generateAuthUrl());
+    res.redirect(google.generateAuthUrl(req.query.slackId));
   }
 })
 app.get('/google/callback', function(req, res){
-  var user;
-  var tokens;
-  var subject;
-  var date;
+  let user;
   User.findOne({slackId: req.query.state})
   .then(function(u){
     user = u;
     return google.getToken(req.query.code)
   })
   .then(function(t){
-    tokens = t;
-    user.googleCalAccount.accessToken = t;
+    user.googleCalAccount = t;
     return user.save();
-  })
-  .then(function(){
-      return Task.findOne({requesterId: user._id})
-      .exec(function(err, task){
-        if(err){
-          console.log(err)
-        }
-        subject = task.subject;
-        date = task.day;
-        console.log('day', date);
-        google.createCalendarEvent(tokens, subject, date)
-      })
   })
   .then(function(){
     res.redirect('https://horizonsfall2017.slack.com/messages/G7NHU1THS/files/F7P6MDE3C/');
   })
   .catch((err)=>{
-    if(err){
-      console.log(err);
-    }
-  })
-})
-
-app.post('/messagesAction', (req, res) =>{
-var data = JSON.parse(req.body.payload);
-console.log("MESSAGES ACTION DATA", data);
-if(data.original_message.attachments[0].callback_id === 'schedule'){
-var inviteeName = data.original_message.attachments[0].fields[0].value;
-var date = new Date(data.original_message.attachments[0].fields[1].value);
-var time = data.original_message.attachments[0].fields[2].value;
-
-var newMeeting = new Meeting({
-  day: date,
-  subject: "Meeting",
-  meetingLength: "30",
-  confirmed: false,
-  createdAt: new Date(),
-  requesterId: data.user.id
+    console.log("Error with google callback", err);
+  });
 });
 
-  newMeeting.save()
-    .then((meeting)=>{
-      return inviteeName.forEach((invitee)=>{
-        User.findOne({slackUsername: invitee})
-        .then(user=>{
-          var newRequest = new InviteRequest({
-            eventId: meeting._id,
-            inviteeId: user._id,
-            requesterId: meeting.requesterId,
-            confirmed: false,
-          });
-          newRequest.save()
-        })
-        .catch(function(err){
-          console.log('err saving requests', err)
-        })
-      })
-    })
-    .then(()=>{
-      res.send('Meeting created!')
-    })
-    .catch(function(err){
-      console.log('err creating meetings', err)
-    })
-}
-
-if(data.original_message.attachments[0].callback_id ==="reminder"){
-  var subject = data.original_message.attachments[0].fields[0].value;
-  var day = new Date(data.original_message.attachments[0].fields[1].value);
-    User.findOne({slackId: data.user.id})
-    .then(function(user){
-      var newTask = new Task({
-        subject: subject,
-        day: day,
-        requesterId:user.id
+app.post('/messagesAction', (req, res) =>{
+  const data = JSON.parse(req.body.payload);
+  const fieldsArr = data.original_message.attachments[0].fields;
+  let user;
+  // let event;
+  // console.log(data);
+  User.findOne({slackId: data.user.id})
+  .then(u => {
+    user = u;
+    console.log(user);
+    return google.createCalendarEvent(user.googleCalAccount,
+      fieldsArr[0].value,
+      new Date(fieldsArr[1].value).toISOString()
+    )
+  })
+  .then(event => {
+    console.log('EVENT', event);
+    let temp;
+    switch(data.callback_id) {
+      case 'reminder':
+      temp = new Task({
+        subject: data.original_message.attachments[0].fields[0].value,
+        day: new Date(data.original_message.attachments[0].fields[1].value),
+        requesterId: user.id,
+        // googleCalEventId: ,
       });
-      newTask.save(function(err){
-        if(err){
-          console.log("err", err)
-        }
-          res.send(`Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${data.user.id}`);
-      })
-    })
-    .catch(function(err){
-      console.log('err in messagesAction', err)
-    })
-  }
+      break;
+      case 'schedule':
+      temp = new Meeting({
+        subject: data.original_message.attachments[0].fields[0].value,
+        day: new Date(data.original_message.attachments[0].fields[1].value),
+        requesterId: user.id,
+        createdAt: new Date(),
+        // googleCalFields: ,
+      });
+      break;
+      default:
+      console.log('WTF YOU SHOULDNT BE HERE');
+    }
+    return temp.save()
+  })
+  .then(() => res.send('horray'))
+  .catch(err => console.log(err));
 })
 
 app.use('/', index);

@@ -15,20 +15,30 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 function handleDialogflowConvo(message) {
   dialogflow.interpretUserMessage(message.text, message.user)
   .then(function(res) {
-    var { data } = res;
-    if (data.result.metadata.intentName === 'Remind') {
-      if (data.result.actionIncomplete) {
-        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-      } else {
-        console.log("message in reminderConfirm", data);
-        reminderConfirm(message, data);
-      }
-    } else {
-      if (data.result.actionIncomplete) {
-        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-      } else {
-        scheduleConfirm(message, data);
-      }
+    const { data } = res;
+    const i = data.result.metadata.intentName;
+    if (i === 'Remind' || i === 'Meeting.add') {
+      User.findOrCreate(message.user)
+      .then((u) => {
+        if (u.googleCalAccount) {
+          return u;
+        } else {
+          return web.chat.postMessage(message.channel, `Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${message.user}`);
+        }
+      })
+      .then((resp) => {
+        if (resp.slackId) {
+          if (data.result.actionIncomplete) {
+            web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+          } else {
+            if (i === 'Remind') reminderConfirm(message, data);
+            if (i === 'Meeting.add') scheduleConfirm(message, data);
+          }
+        }
+      })
+      .catch(err => {
+        console.log('Error finding or creating user', err);
+      });
     }
   })
   .catch(function(err) {
@@ -39,6 +49,15 @@ function handleDialogflowConvo(message) {
   });
 };
 
+rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
+  if (! message.user) {
+    console.log('Message send by a bot, ignoring');
+    return;
+  } else {
+    handleDialogflowConvo(message);
+  }
+});
+
 function scheduleConfirm(message, data) {
   web.chat.postMessage(message.channel,
     `Would you like me to schedule you ${data.result.parameters.description} ${data.result.parameters.date}?`,
@@ -47,17 +66,17 @@ function scheduleConfirm(message, data) {
         {
           "fields": [
             {
-              "title": "subject",
-              "value": data.result.parameters.description
+              "title": "Subject",
+              "value": data.result.parameters.description || 'Meeting'
             },
             {
-              "title": "date",
+              "title": "Date",
               "value": data.result.parameters.date
             }
           ],
           "text": "Please, confirm.",
           "fallback": "You are unable to add a new Calendar event.",
-          "callback_id": "reminder",
+          "callback_id": "schedule",
           "color": "#3AA3E3",
           "attachment_type": "default",
           "actions": [
@@ -90,11 +109,11 @@ function reminderConfirm(message, data) {
         {
           "fields": [
             {
-              "title": "subject",
+              "title": "Subject",
               "value": data.result.parameters.description
             },
             {
-              "title": "date",
+              "title": "Date",
               "value": data.result.parameters.date
             }
           ],
