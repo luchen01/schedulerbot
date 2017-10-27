@@ -23,7 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 var google = require('./routes/googleRoutes');
 var slack = require('./routes/slackRoutes');
-require('./routes/Luchen');
+require('./routes/combinedBotLuchen');
 
 app.use(google);
 app.use(slack);

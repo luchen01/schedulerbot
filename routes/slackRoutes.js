@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express();
 var {Task, User, Meeting, InviteRequest} = require('../models/models');
-
+var google = require('./googleCal');
 router.get('/', function(req, res, next) {
   res.redirect('https://slack.com/oauth/authorize');
 });

@@ -6,7 +6,8 @@ router.get('/setup', function(req, res){
   if(req.query.slackId){
     res.redirect(google.generateAuthUrl());
   }
-})
+});
+
 router.get('/google/callback', function(req, res){
   var user;
   var tokens;
@@ -18,9 +19,8 @@ router.get('/google/callback', function(req, res){
     return google.getToken(req.query.code)
   })
   .then(function(t){
-
     tokens = t;
-    user.googleCalAccount.accessToken = t;
+    user.googleCalAccount = t;
     return user.save();
   })
   .then(function(){
@@ -41,5 +41,5 @@ router.get('/google/callback', function(req, res){
   .catch((err)=>{
     console.log("Error with google callback", err);
   });
-
+});
 module.exports = router;
