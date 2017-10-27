@@ -13,32 +13,24 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 });
 
 function handleDialogflowConvo(message) {
-  dialogflow.interpretUserMessage(message.text, message.user)
+  // console.log('MESSAGE', message);
+  const newText = getMentions(message);
+  dialogflow.interpretUserMessage(newText, message.user)
   .then(function(res) {
-    const { data } = res;
-    const i = data.result.metadata.intentName;
-    if (i === 'Remind' || i === 'Meeting.add') {
-      User.findOrCreate(message.user)
-      .then((u) => {
-        if (u.googleCalAccount) {
-          return u;
-        } else {
-          return web.chat.postMessage(message.channel, `Hello, please give access to your Google Calender ${process.env.DOMAIN}/setup?slackId=${message.user}`);
-        }
-      })
-      .then((resp) => {
-        if (resp.slackId) {
-          if (data.result.actionIncomplete) {
-            web.chat.postMessage(message.channel, data.result.fulfillment.speech);
-          } else {
-            if (i === 'Remind') reminderConfirm(message, data);
-            if (i === 'Meeting.add') scheduleConfirm(message, data);
-          }
-        }
-      })
-      .catch(err => {
-        console.log('Error finding or creating user', err);
-      });
+    var { data } = res;
+    console.log(data);
+    if (data.result.metadata.intentName === 'Remind') {
+      if (data.result.actionIncomplete) {
+        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+      } else {
+        reminderConfirm(message, data);
+      }
+    } else {
+      if (data.result.actionIncomplete) {
+        web.chat.postMessage(message.channel, data.result.fulfillment.speech);
+      } else {
+        scheduleConfirm(message, data);
+      }
     }
   })
   .catch(function(err) {
@@ -48,30 +40,26 @@ function handleDialogflowConvo(message) {
     );
   });
 };
-
-rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
-  if (! message.user) {
-    console.log('Message send by a bot, ignoring');
-    return;
-  } else {
-    handleDialogflowConvo(message);
-  }
-});
-
 function scheduleConfirm(message, data) {
+  let invitees = data.result.parameters.invitees.join(', ');
+
   web.chat.postMessage(message.channel,
-    `Would you like me to schedule you ${data.result.parameters.description} ${data.result.parameters.date}?`,
+    `Would you like me to schedule you a meeting with ${invitees} on ${data.result.parameters.date} at ${data.result.parameters.time}?`,
     {
       "attachments": [
         {
           "fields": [
             {
-              "title": "Subject",
-              "value": data.result.parameters.description || 'Meeting'
+              "title": "Invite",
+              "value": invitees
             },
             {
-              "title": "Date",
+              "title": "date",
               "value": data.result.parameters.date
+            },
+            {
+              "title": "time",
+              "value": data.result.parameters.time
             }
           ],
           "text": "Please, confirm.",
@@ -100,7 +88,6 @@ function scheduleConfirm(message, data) {
     }
   )
 };
-
 function reminderConfirm(message, data) {
   web.chat.postMessage(message.channel,
     `Would you like me to remind you ${data.result.parameters.description} ${data.result.parameters.date}?`,
@@ -109,11 +96,11 @@ function reminderConfirm(message, data) {
         {
           "fields": [
             {
-              "title": "Subject",
+              "title": "subject",
               "value": data.result.parameters.description
             },
             {
-              "title": "Date",
+              "title": "date",
               "value": data.result.parameters.date
             }
           ],
@@ -143,40 +130,52 @@ function reminderConfirm(message, data) {
     }
   )
 };
+
 function getMentions(message){
   let inviteeIds = {};
-  let regExp = [/<@(\w+)>/g];
+  let regExp = /<@(\w+)>/g;
   let currId = regExp.exec(message.text);
+  console.log('currId', currId);
   while(currId !== null) {
-    if (inviteeIds.hasOwnProperty(currId[1])){
+    console.log('inside while loop')
+    if (!inviteeIds.hasOwnProperty(currId[1])){
       inviteeIds[currId[1]] = '';
     }
     currId = regExp.exec(message.text);
   }
-  Object.keys(inviteeIds).forEach((user)=>{
-  User.find({slackId: user})
-  .then((slackUser)=>{
-  inviteeIds[user] = slackUser.username;
-  })
-  });
-  return inviteeIds;
+  console.log('before promise all inviteeIds', inviteeIds);
+  Promise.all(Object.keys(inviteeIds).map((user)=>{
+    console.log('inside For Each user', user);
+    return User.find({slackId: user}).exec((slackUser)=>{
+          console.log('SlackUser', slackUser);
+        inviteeIds[user] = slackUser.slackUsername;
+        });
+  }))
+.then(function(){
+  return message.text.slice().split(' ').map((word) => {
+    return (inviteeIds.hasOwnProperty(word)) ? inviteeIds[word] : word;
+  }).join(' ');
+})
+.catch(function(err){
+  console.log('err in getMentions', err)
+})
 }
-
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
   if (! message.user) {
     console.log('Message send by a bot, ignoring');
     return;
   } else {
-    var userInfo = JSON.parse(web.users.info(message.user));
-    console.log(userInfo);
-    User.findOrCreate(message.user, userInfo.name)
-    .then(function(user){
-      //if(user.googleCalAccount.accessToken.length > 0){
-      //  web.chat.postMessage(message.channel, `Hello, I'm Scheduler Bot. Please give me acceses to your Google Calendar https://localhost:3000/setup?slackId=${message.user}`);
-    //  }
+    var userInfo = (ui) => web.users.info(ui);
+    userInfo(message.user)
+    .then((res) => {
+        User.findOrCreate(message.user, res.user.name, res.user.profile.email)
+        .then(function(resp){handleDialogflowConvo(message)})
+        .catch(function(err){
+          console.log('Error', err)
+        })
     })
-    .catch(function(err){
-      console.log('Error', err)
+    .catch((err)=>{
+      console.log("handleDialogflowConvo",err);
     })
   }
 });
