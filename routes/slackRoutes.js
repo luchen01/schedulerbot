@@ -68,7 +68,7 @@ function createInvite(inviteeName, meeting){
             confirmed: false,
           });
           newRequest.save()
-})
+      })
 })
 };
 
